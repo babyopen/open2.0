@@ -5993,11 +5993,11 @@ const Business = {
         const predictionText = item.predictions.map(p => p.zodiac).join(' ');
         
         html += `
-          <div class="special-history-item" data-index="${idx}" style="padding:10px;border-bottom:1px solid var(--border);font-size:13px;background:var(--card);border-radius:8px;margin-bottom:8px;position:relative;overflow:hidden;touch-action:pan-y;" 
+          <div class="special-history-item" data-index="${idx}" style="padding:12px;border-bottom:1px solid var(--border);background:var(--card);border-radius:8px;margin-bottom:10px;position:relative;overflow:hidden;touch-action:pan-y;" 
             ontouchstart="Utils.SwipeRightCopyHandler.handleTouchStart(event, ${idx}, 'predictionHistory')" 
             ontouchmove="Utils.SwipeRightCopyHandler.handleTouchMove(event, ${idx}, 'predictionHistory')" 
             ontouchend="Utils.SwipeRightCopyHandler.handleTouchEnd(event, ${idx}, 'predictionHistory', (item) => '${predictionText.replace(/'/g, "\\'")}')">
-            <div class="special-history-content" style="transition:transform 0.3s ease;pointer-events:none;">
+            <div class="special-history-content" style="transition:transform 0.3s ease;">
               <div style="color:var(--sub-text);margin-bottom:8px;font-size:11px;display:flex;justify-content:space-between;align-items:center;">
                 <span>${titleText}</span>
                 <span>${item.time}</span>
