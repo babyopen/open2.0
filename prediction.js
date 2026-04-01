@@ -7,7 +7,6 @@ const Prediction = {
    * 初始化预测历史
    */
   init() {
-    console.log('预测历史模块初始化');
     this.renderPredictionHistory();
   },
 

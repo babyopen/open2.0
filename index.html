@@ -5450,17 +5450,18 @@ const Business = {
   showZodiacDetail: (zodiac) => {
     const data = Business.calcZodiacAnalysis();
 
-
     // 创建弹窗
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
+    modal.style.opacity = '0';
+    modal.style.transition = 'opacity 0.3s ease';
     
     // 生成详情HTML
     let detailHtml = `
       <div class="modal-content">
         <div class="modal-header">
           <h3 class="modal-title">${zodiac}</h3>
-          <button class="modal-close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+          <button class="modal-close-btn" onclick="const modal = this.closest('.modal-overlay'); modal.style.opacity = '0'; setTimeout(() => modal.remove(), 300);">×</button>
         </div>
         
         <div style="font-size:14px;color:var(--text);margin-bottom:12px;font-weight:500;">关联号码</div>
@@ -5478,6 +5479,61 @@ const Business = {
           }).join('')}
         </div>
         
+        ${data && data.zodiacDetails && data.zodiacDetails[zodiac] ? `
+        <div style="margin-top:20px;">
+          <div style="font-size:14px;color:var(--text);margin-bottom:12px;font-weight:500;">评分详情</div>
+          <div style="background:var(--bg-secondary);border-radius:12px;padding:16px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:13px;color:var(--text);">冷号状态</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--primary);">${data.zodiacDetails[zodiac].cold}分</span>
+                </div>
+                <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
+                  <div style="height:100%;width:${(data.zodiacDetails[zodiac].cold / 30) * 100}%;background:linear-gradient(90deg, #6366f1, #8b5cf6);border-radius:3px;"></div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:13px;color:var(--text);">热号状态</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--primary);">${data.zodiacDetails[zodiac].hot}分</span>
+                </div>
+                <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
+                  <div style="height:100%;width:${(data.zodiacDetails[zodiac].hot / 20) * 100}%;background:linear-gradient(90deg, #10b981, #34d399);border-radius:3px;"></div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:13px;color:var(--text);">形态匹配</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--primary);">${data.zodiacDetails[zodiac].shape}分</span>
+                </div>
+                <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
+                  <div style="height:100%;width:${(data.zodiacDetails[zodiac].shape / 30) * 100}%;background:linear-gradient(90deg, #f59e0b, #fbbf24);border-radius:3px;"></div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:13px;color:var(--text);">间隔匹配</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--primary);">${data.zodiacDetails[zodiac].interval}分</span>
+                </div>
+                <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
+                  <div style="height:100%;width:${(data.zodiacDetails[zodiac].interval / 20) * 100}%;background:linear-gradient(90deg, #ef4444, #f87171);border-radius:3px;"></div>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:16px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <span style="font-size:14px;font-weight:600;color:var(--text);">综合评分</span>
+                <span style="font-size:16px;font-weight:700;color:var(--primary);">${data.zodiacScores[zodiac]}分</span>
+              </div>
+              <div style="height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden;">
+                <div style="height:100%;width:${(data.zodiacScores[zodiac] / 100) * 100}%;background:linear-gradient(90deg, #6366f1, #ec4899);border-radius:4px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        ` : ''}
+        
         <div style="margin-top:20px;display:flex;justify-content:center;">
           <button class="btn-line" onclick="Business.copyZodiacNumbersByZodiac('${zodiac.replace(/'/g, "\\'")}')">复制号码</button>
         </div>
@@ -5489,10 +5545,18 @@ const Business = {
     modal.innerHTML = detailHtml;
     
     modal.addEventListener('click', (e) => {
-      if(e.target === modal) modal.remove();
+      if(e.target === modal) {
+        modal.style.opacity = '0';
+        setTimeout(() => modal.remove(), 300);
+      }
     });
     
     document.body.appendChild(modal);
+    
+    // 触发动画
+    setTimeout(() => {
+      modal.style.opacity = '1';
+    }, 10);
   },
 
   /**
@@ -8097,50 +8161,72 @@ const Business = {
           if (idx !== -1) rank = `第${idx + 1}名`;
         }
         
-        // 评分标签
-        const tags = [];
-        if (details.cold > 0) tags.push(`<span style="background:var(--bg-secondary);padding:2px 8px;border-radius:12px;font-size:11px;">冷${details.cold}</span>`);
-        if (details.hot > 0) tags.push(`<span style="background:var(--bg-secondary);padding:2px 8px;border-radius:12px;font-size:11px;">热${details.hot}</span>`);
-        if (details.shape > 0) tags.push(`<span style="background:var(--bg-secondary);padding:2px 8px;border-radius:12px;font-size:11px;">形${details.shape}</span>`);
-        if (details.interval > 0) tags.push(`<span style="background:var(--bg-secondary);padding:2px 8px;border-radius:12px;font-size:11px;">间${details.interval}</span>`);
-        
         periodsHtml += `
           <div style="margin-bottom:16px;">
             <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text);">${periodLabels[period]}分析</div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">
-              <div class="score-glass-card">
-                <div style="font-size:12px;color:var(--sub-text);margin-bottom:4px;">冷号状态</div>
-                <div style="font-size:18px;font-weight:700;color:#FF3B30">${details.cold}分</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:13px;color:var(--text);">冷号状态</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--primary);">${details.cold}分</span>
+                </div>
+                <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
+                  <div style="height:100%;width:${(details.cold / 30) * 100}%;background:linear-gradient(90deg, #6366f1, #8b5cf6);border-radius:3px;"></div>
+                </div>
               </div>
-              <div class="score-glass-card">
-                <div style="font-size:12px;color:var(--sub-text);margin-bottom:4px;">热号状态</div>
-                <div style="font-size:18px;font-weight:700;color:var(--primary)">${details.hot}分</div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:13px;color:var(--text);">热号状态</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--primary);">${details.hot}分</span>
+                </div>
+                <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
+                  <div style="height:100%;width:${(details.hot / 20) * 100}%;background:linear-gradient(90deg, #10b981, #34d399);border-radius:3px;"></div>
+                </div>
               </div>
-              <div class="score-glass-card">
-                <div style="font-size:12px;color:var(--sub-text);margin-bottom:4px;">形态匹配</div>
-                <div style="font-size:18px;font-weight:700;color:#FF9500">${details.shape}分</div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:13px;color:var(--text);">形态匹配</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--primary);">${details.shape}分</span>
+                </div>
+                <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
+                  <div style="height:100%;width:${(details.shape / 30) * 100}%;background:linear-gradient(90deg, #f59e0b, #fbbf24);border-radius:3px;"></div>
+                </div>
               </div>
-              <div class="score-glass-card">
-                <div style="font-size:12px;color:var(--sub-text);margin-bottom:4px;">间隔匹配</div>
-                <div style="font-size:18px;font-weight:700;color:#5856D6">${details.interval}分</div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:13px;color:var(--text);">间隔匹配</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--primary);">${details.interval}分</span>
+                </div>
+                <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
+                  <div style="height:100%;width:${(details.interval / 20) * 100}%;background:linear-gradient(90deg, #ef4444, #f87171);border-radius:3px;"></div>
+                </div>
               </div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:12px;">
-              <div class="score-glass-card">
+            <div style="margin-top:16px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <span style="font-size:14px;font-weight:600;color:var(--text);">综合评分</span>
+                <span style="font-size:16px;font-weight:700;color:var(--primary);">${score}分</span>
+              </div>
+              <div style="height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden;">
+                <div style="height:100%;width:${(score / 100) * 100}%;background:linear-gradient(90deg, #6366f1, #ec4899);border-radius:4px;"></div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px;font-size:12px;">
+              <div style="background:var(--bg-secondary);border-radius:8px;padding:10px;text-align:center;">
                 <div style="font-size:12px;color:var(--sub-text);margin-bottom:4px;">出现次数</div>
-                <div style="font-size:18px;font-weight:700;color:var(--primary)">${count}次</div>
+                <div style="font-size:16px;font-weight:700;color:var(--primary);">${count}次</div>
               </div>
-              <div class="score-glass-card">
+              <div style="background:var(--bg-secondary);border-radius:8px;padding:10px;text-align:center;">
                 <div style="font-size:12px;color:var(--sub-text);margin-bottom:4px;">遗漏期数</div>
-                <div style="font-size:18px;font-weight:700;color:var(--primary)">${miss}期</div>
+                <div style="font-size:16px;font-weight:700;color:var(--primary);">${miss}期</div>
               </div>
-              <div class="score-glass-card">
+              <div style="background:var(--bg-secondary);border-radius:8px;padding:10px;text-align:center;">
                 <div style="font-size:12px;color:var(--sub-text);margin-bottom:4px;">平均遗漏</div>
-                <div style="font-size:18px;font-weight:700;color:var(--primary)">${avgMiss}期</div>
+                <div style="font-size:16px;font-weight:700;color:var(--primary);">${avgMiss}期</div>
               </div>
-              <div class="score-glass-card">
+              <div style="background:var(--bg-secondary);border-radius:8px;padding:10px;text-align:center;">
                 <div style="font-size:12px;color:var(--sub-text);margin-bottom:4px;">排名</div>
-                <div style="font-size:18px;font-weight:700;color:var(--primary)">${rank}</div>
+                <div style="font-size:16px;font-weight:700;color:var(--primary);">${rank}</div>
               </div>
             </div>
           </div>
@@ -8149,11 +8235,13 @@ const Business = {
       
       const modal = document.createElement('div');
       modal.className = 'modal-overlay';
+      modal.style.opacity = '0';
+      modal.style.transition = 'opacity 0.3s ease';
       modal.innerHTML = `
         <div class="modal-content">
           <div class="modal-header">
-            <div class="modal-title">${zodiac} - 详细评分</div>
-            <button class="modal-close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+            <h3 class="modal-title">${zodiac} - 详细评分</h3>
+            <button class="modal-close-btn" onclick="const modal = this.closest('.modal-overlay'); modal.style.opacity = '0'; setTimeout(() => modal.remove(), 300);">×</button>
           </div>
           <div style="text-align:center;margin-bottom:20px;">
             <div style="font-size:48px;font-weight:700;color:var(--primary);margin-bottom:8px;">${zodiac}</div>
@@ -8164,10 +8252,18 @@ const Business = {
       `;
       
       modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.remove();
+        if (e.target === modal) {
+          modal.style.opacity = '0';
+          setTimeout(() => modal.remove(), 300);
+        }
       });
       
       document.body.appendChild(modal);
+      
+      // 触发动画
+      setTimeout(() => {
+        modal.style.opacity = '1';
+      }, 10);
     } catch (e) {
       console.error('显示生肖详细评分失败', e);
       Toast.show('加载详情失败');

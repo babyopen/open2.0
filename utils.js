@@ -49,11 +49,39 @@ const Utils = {
       if(typeof structuredClone === 'function') {
         return structuredClone(obj);
       }
+      // 优化JSON序列化性能
+      if(Array.isArray(obj)) {
+        return obj.map(item => Utils.deepClone(item));
+      }
+      if(obj.constructor === Object) {
+        const cloned = {};
+        for(const key in obj) {
+          if(obj.hasOwnProperty(key)) {
+            cloned[key] = Utils.deepClone(obj[key]);
+          }
+        }
+        return cloned;
+      }
       return JSON.parse(JSON.stringify(obj));
     } catch(e) {
       console.error('深拷贝失败', e);
       return obj;
     }
+  },
+
+  /**
+   * 浅拷贝对象（性能优化）
+   * @param {Object} obj - 要拷贝的对象
+   * @returns {Object} 拷贝后的对象
+   */
+  shallowClone: (obj) => {
+    if(typeof obj !== 'object' || obj === null) {
+      return obj;
+    }
+    if(Array.isArray(obj)) {
+      return [...obj];
+    }
+    return { ...obj };
   },
 
   /**

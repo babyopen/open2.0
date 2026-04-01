@@ -112,9 +112,18 @@ const StateManager = {
    * @param {string} group - 分组名
    */
   selectGroup: (group) => {
-    const allTags = [...document.querySelectorAll(`.tag[data-group="${group}"]`)];
+    // 缓存DOM查询结果
+    const groupElement = document.getElementById(`${group}Tags`) || document.querySelector(`[data-group="${group}"]`);
+    let allTags;
+    
+    if(groupElement) {
+      allTags = [...groupElement.querySelectorAll('.tag')];
+    } else {
+      allTags = [...document.querySelectorAll(`.tag[data-group="${group}"]`)];
+    }
+    
     const allValues = allTags.map(tag => Utils.formatTagValue(tag.dataset.value, group));
-    const newSelected = { ...StateManager._state.selected };
+    const newSelected = Utils.shallowClone(StateManager._state.selected);
     newSelected[group] = allValues;
     StateManager.setState({ selected: newSelected });
   },
@@ -125,9 +134,19 @@ const StateManager = {
    */
   invertGroup: (group) => {
     const state = StateManager._state;
-    const allTags = [...document.querySelectorAll(`.tag[data-group="${group}"]`)];
+    
+    // 缓存DOM查询结果
+    const groupElement = document.getElementById(`${group}Tags`) || document.querySelector(`[data-group="${group}"]`);
+    let allTags;
+    
+    if(groupElement) {
+      allTags = [...groupElement.querySelectorAll('.tag')];
+    } else {
+      allTags = [...document.querySelectorAll(`.tag[data-group="${group}"]`)];
+    }
+    
     const allValues = allTags.map(tag => Utils.formatTagValue(tag.dataset.value, group));
-    const newSelected = { ...state.selected };
+    const newSelected = Utils.shallowClone(state.selected);
     newSelected[group] = allValues.filter(v => !state.selected[group].includes(v));
     StateManager.setState({ selected: newSelected });
   },

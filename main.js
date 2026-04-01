@@ -8,13 +8,14 @@ const App = {
    */
   init() {
     try {
-      console.log('=== 摇美味应用初始化 ===');
-      
       // 初始化存储
       this.initStorage();
       
       // 初始化状态管理
       this.initStateManager();
+      
+      // 初始化性能监控
+      this.initPerformance();
       
       // 初始化DOM缓存
       this.initDomCache();
@@ -39,8 +40,6 @@ const App = {
       
       // 启动应用
       this.start();
-      
-      console.log('=== 摇美味应用初始化完成 ===');
     } catch (error) {
       console.error('应用初始化失败:', error);
       Toast.show('应用初始化失败，请刷新重试');
@@ -53,7 +52,6 @@ const App = {
   initStorage() {
     if(typeof Storage !== 'undefined') {
       Storage.init();
-      console.log('存储模块初始化完成');
     } else {
       console.warn('本地存储不可用，使用内存存储');
     }
@@ -65,9 +63,17 @@ const App = {
   initStateManager() {
     if(typeof StateManager !== 'undefined') {
       StateManager.init();
-      console.log('状态管理模块初始化完成');
     } else {
       console.error('状态管理模块未加载');
+    }
+  },
+
+  /**
+   * 初始化性能监控
+   */
+  initPerformance() {
+    if(typeof Performance !== 'undefined') {
+      // 性能监控模块已自动初始化
     }
   },
 
@@ -77,7 +83,6 @@ const App = {
   initDomCache() {
     if(typeof Dom !== 'undefined') {
       Dom.init();
-      console.log('DOM缓存模块初始化完成');
     } else {
       console.warn('DOM缓存模块未加载');
     }
@@ -89,7 +94,6 @@ const App = {
   initEventBinder() {
     if(typeof EventBinder !== 'undefined') {
       EventBinder.init();
-      console.log('事件绑定模块初始化完成');
     } else {
       console.error('事件绑定模块未加载');
     }
@@ -101,7 +105,6 @@ const App = {
   initBusiness() {
     if(typeof Business !== 'undefined') {
       Business.init();
-      console.log('业务逻辑模块初始化完成');
     } else {
       console.error('业务逻辑模块未加载');
     }
@@ -113,7 +116,6 @@ const App = {
   initFilter() {
     if(typeof Filter !== 'undefined') {
       Filter.init();
-      console.log('筛选功能模块初始化完成');
     } else {
       console.warn('筛选功能模块未加载');
     }
@@ -125,7 +127,6 @@ const App = {
   initAnalysis() {
     if(typeof Business !== 'undefined' && Business.initAnalysisPage) {
       // 分析页面会在切换到该标签时初始化
-      console.log('分析页面模块初始化完成');
     } else {
       console.warn('分析页面模块未加载');
     }
@@ -137,7 +138,6 @@ const App = {
   initPrediction() {
     if(typeof Business !== 'undefined' && Business.renderPredictionHistory) {
       // 预测历史会在切换到该标签时初始化
-      console.log('预测历史模块初始化完成');
     } else {
       console.warn('预测历史模块未加载');
     }
@@ -149,7 +149,6 @@ const App = {
   initSpecialHistory() {
     if(typeof Business !== 'undefined' && Business.renderSpecialHistory) {
       // 精选特码历史会在切换到该标签时初始化
-      console.log('精选特码历史模块初始化完成');
     } else {
       console.warn('精选特码历史模块未加载');
     }
@@ -174,8 +173,6 @@ const App = {
           Business.silentRefreshHistory();
         }, 1000);
       }
-      
-      console.log('应用启动成功');
     } catch (error) {
       console.error('应用启动失败:', error);
     }
@@ -195,7 +192,6 @@ const App = {
    * 重新初始化应用
    */
   reinit() {
-    console.log('=== 重新初始化应用 ===');
     this.init();
   },
 
@@ -203,7 +199,6 @@ const App = {
    * 清理应用
    */
   cleanup() {
-    console.log('=== 清理应用 ===');
     // 清理定时器
     if(typeof Business !== 'undefined' && Business.clearTimers) {
       Business.clearTimers();

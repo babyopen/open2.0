@@ -90,7 +90,6 @@ Business.initSwipeGesture = () => {
  */
 Business.handleSwipe = (direction) => {
   // 这里可以添加滑动后的处理逻辑
-  console.log('Swipe detected:', direction);
   // 例如：切换到其他标签页
   if(direction === 'left') {
     // 从左向右滑动，切换到下一个标签
@@ -548,6 +547,12 @@ Business.calcMultiDimensionalHotNums = (list, numCount, lastAppear, zodiac, hotD
     }
   });
   
+  // 预计算最大出现次数，避免重复计算
+  const maxCount = Math.max(...Object.values(numCount));
+  // 预计算最近10期数据，避免重复切片
+  const recentList = list.slice(0, Math.min(10, list.length));
+  const recentListLength = recentList.length;
+  
   // 步骤4: 筛选属于前6个热门生肖的号码
   const candidateNums = [];
   for(let num = 1; num <= 49; num++) {
@@ -561,19 +566,21 @@ Business.calcMultiDimensionalHotNums = (list, numCount, lastAppear, zodiac, hotD
       let score = 0;
       
       // 维度1: 历史出现频率 (权重25%)
-      const maxCount = Math.max(...Object.values(numCount));
       const freqScore = maxCount > 0 ? (count / maxCount) * 100 : 0;
       score += freqScore * 0.25;
       
       // 维度2: 近期热度 - 最近10期内出现次数 (权重20%)
       let recentCount = 0;
-      const recentList = list.slice(0, Math.min(10, list.length));
-      recentList.forEach(item => {
-        const s = Business.getSpecial(item);
-        if(s.te === num) recentCount++;
-      });
-      const recentScore = recentList.length > 0 ? (recentCount / recentList.length) * 100 : 0;
-      score += recentScore * 0.20;
+      if(recentListLength > 0) {
+        for(let i = 0; i < recentListLength; i++) {
+          const s = Business.getSpecial(recentList[i]);
+          if(s.te === num) {
+            recentCount++;
+          }
+        }
+        const recentScore = (recentCount / recentListLength) * 100;
+        score += recentScore * 0.20;
+      }
       
       // 维度3: 遗漏期数 (权重15%)
       let missScore = 0;

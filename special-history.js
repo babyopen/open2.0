@@ -7,7 +7,6 @@ const SpecialHistory = {
    * 初始化精选特码历史
    */
   init() {
-    console.log('精选特码历史模块初始化');
     this.renderSpecialHistory();
   },
 

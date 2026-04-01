@@ -12,8 +12,8 @@ const Business = {
     const state = StateManager._state;
     if(state.lockExclude) return;
 
-    const newExcluded = [...state.excluded];
-    const newHistory = [...state.excludeHistory];
+    const newExcluded = Utils.shallowClone(state.excluded);
+    const newHistory = Utils.shallowClone(state.excludeHistory);
 
     if(newExcluded.includes(num)){
       newHistory.push([num, 'out']);
@@ -36,7 +36,7 @@ const Business = {
 
     const allNums = Array.from({length: 49}, (_, i) => i + 1);
     const newExcluded = [];
-    const newHistory = [...state.excludeHistory];
+    const newHistory = Utils.shallowClone(state.excludeHistory);
 
     allNums.forEach(num => {
       const isCurrentlyExcluded = state.excluded.includes(num);
@@ -61,9 +61,9 @@ const Business = {
     const state = StateManager._state;
     if(state.lockExclude || !state.excludeHistory.length) return;
 
-    const newHistory = [...state.excludeHistory];
+    const newHistory = Utils.shallowClone(state.excludeHistory);
     const [num, act] = newHistory.pop();
-    const newExcluded = [...state.excluded];
+    const newExcluded = Utils.shallowClone(state.excluded);
 
     act === 'in' 
       ? newExcluded.splice(newExcluded.indexOf(num), 1)
@@ -98,8 +98,8 @@ const Business = {
       return;
     }
 
-    const newExcluded = [...state.excluded];
-    const newHistory = [...state.excludeHistory];
+    const newExcluded = Utils.shallowClone(state.excluded);
+    const newHistory = Utils.shallowClone(state.excludeHistory);
     let addCount = 0;
 
     nums.forEach(num => {
@@ -375,17 +375,49 @@ const Business = {
 
   // ====================== 导航相关 ======================
   /**
+   * 导航配置
+   */
+  _navConfig: {
+    pages: ['filterPage', 'analysisPage', 'recordPage', 'profilePage'],
+    navTabs: {
+      0: [
+        { target: 'mod-saved', label: '我的方案' },
+        { target: 'mod-zodiac', label: '生肖' },
+        { target: 'mod-color', label: '波色' },
+        { target: 'mod-colorsx', label: '波色单双' },
+        { target: 'mod-type', label: '家禽野兽' },
+        { target: 'mod-element', label: '五行' },
+        { target: 'mod-head', label: '头数' },
+        { target: 'mod-tail', label: '尾数' },
+        { target: 'mod-sum', label: '尾合' },
+        { target: 'mod-bs', label: '大小单双' },
+        { target: 'mod-hot', label: '冷热号' }
+      ],
+      1: [
+        { target: 'historyPanel', label: '历史记录' },
+        { target: 'analysisPanelContent', label: '维度分析' },
+        { target: 'zodiacAnalysisPanel', label: '生肖关联' }
+      ]
+    },
+    analysisTabMap: {
+      'historyPanel': 'tabHistory',
+      'analysisPanelContent': 'tabAnalysis',
+      'zodiacAnalysisPanel': 'tabZodiac'
+    }
+  },
+
+  /**
    * 切换底部导航
    * @param {number} index - 导航索引
    */
   switchBottomNav: (index) => {
-    document.querySelectorAll('.bottom-nav-item').forEach((el,i)=>{
-      el.classList.toggle('active', i===index);
+    // 更新导航项状态
+    document.querySelectorAll('.bottom-nav-item').forEach((el, i) => {
+      el.classList.toggle('active', i === index);
     });
     
     // 切换页面显示
-    const pages = ['filterPage', 'analysisPage', 'recordPage', 'profilePage'];
-    pages.forEach((pageId, i) => {
+    Business._navConfig.pages.forEach((pageId, i) => {
       const pageEl = document.getElementById(pageId);
       if(pageEl) {
         pageEl.style.display = i === index ? 'block' : 'none';
@@ -393,26 +425,25 @@ const Business = {
       }
     });
     
-    // 控制顶部展示区的显示/隐藏：仅在筛选页面(index=0)显示
+    // 控制顶部展示区的显示/隐藏
     const topBox = document.getElementById('topBox');
     if(topBox) {
       topBox.style.display = index === 0 ? 'block' : 'none';
     }
     
-    // 控制主体内容区的顶部间距：筛选页面有顶部展示区，其他页面没有
+    // 控制主体内容区的顶部间距
     const bodyBox = document.querySelector('.body-box');
     if(bodyBox) {
-      if(index === 0) {
-        bodyBox.style.marginTop = 'calc(var(--top-offset) + var(--safe-top))';
-      } else {
-        bodyBox.style.marginTop = 'calc(12px + var(--safe-top))';
-      }
+      bodyBox.style.marginTop = index === 0 
+        ? 'calc(var(--top-offset) + var(--safe-top))' 
+        : 'calc(12px + var(--safe-top))';
     }
     
-    // 控制快捷导航按钮的显示/隐藏：在筛选页面(index=0)和分析页面(index=1)显示
+    // 控制快捷导航按钮
     const quickNavBtn = document.getElementById('quickNavBtn');
     const quickNavMenu = document.getElementById('quickNavMenu');
     const bottomNav = document.querySelector('.bottom-nav');
+    
     if(quickNavBtn) {
       quickNavBtn.style.display = (index === 0 || index === 1) ? 'flex' : 'none';
     }
@@ -423,80 +454,106 @@ const Business = {
       bottomNav.classList.toggle('needs-space', index === 0 || index === 1);
     }
     
-    // 根据页面切换快捷导航菜单内容
-    const navTabs = document.getElementById('navTabs');
-    if(navTabs) {
-      if(index === 0) {
-        // 筛选页面导航
-        navTabs.innerHTML = `
-          <button class="nav-tab" data-target="mod-saved" role="tab">我的方案</button>
-          <button class="nav-tab" data-target="mod-zodiac" role="tab">生肖</button>
-          <button class="nav-tab" data-target="mod-color" role="tab">波色</button>
-          <button class="nav-tab" data-target="mod-colorsx" role="tab">波色单双</button>
-          <button class="nav-tab" data-target="mod-type" role="tab">家禽野兽</button>
-          <button class="nav-tab" data-target="mod-element" role="tab">五行</button>
-          <button class="nav-tab" data-target="mod-head" role="tab">头数</button>
-          <button class="nav-tab" data-target="mod-tail" role="tab">尾数</button>
-          <button class="nav-tab" data-target="mod-sum" role="tab">尾合</button>
-          <button class="nav-tab" data-target="mod-bs" role="tab">大小单双</button>
-          <button class="nav-tab" data-target="mod-hot" role="tab">冷热号</button>
-        `;
-      } else if(index === 1) {
-        // 分析页面导航
-        navTabs.innerHTML = `
-          <button class="nav-tab" data-target="historyPanel" role="tab">历史记录</button>
-          <button class="nav-tab" data-target="analysisPanelContent" role="tab">维度分析</button>
-          <button class="nav-tab" data-target="zodiacAnalysisPanel" role="tab">生肖关联</button>
-        `;
-      }
-      // 重新绑定导航标签点击事件
-      navTabs.querySelectorAll('.nav-tab').forEach(tab => {
-        tab.addEventListener('click', function() {
-          const targetId = this.getAttribute('data-target');
-          const targetEl = document.getElementById(targetId);
-          if(targetEl) {
-            // 分析页面标签切换逻辑
-            if(index === 1) {
-              // 移除所有标签和面板的active类
-              document.querySelectorAll('.analysis-tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-              });
-              document.querySelectorAll('.analysis-tab-panel').forEach(panel => {
-                panel.classList.remove('active');
-              });
-              
-              // 根据目标ID激活对应的标签和面板
-              if(targetId === 'historyPanel') {
-                document.getElementById('tabHistory').classList.add('active');
-                document.getElementById('historyPanel').classList.add('active');
-              } else if(targetId === 'analysisPanelContent') {
-                document.getElementById('tabAnalysis').classList.add('active');
-                document.getElementById('analysisPanelContent').classList.add('active');
-              } else if(targetId === 'zodiacAnalysisPanel') {
-                document.getElementById('tabZodiac').classList.add('active');
-                document.getElementById('zodiacAnalysisPanel').classList.add('active');
-              }
-            }
-            
-            // 滚动到目标位置
-            const offset = 80; // 偏移量
-            window.scrollTo({top: targetEl.offsetTop - offset, behavior: 'smooth'});
-          }
-          Business.toggleQuickNav(false);
-        });
-      });
-    }
+    // 更新导航菜单内容
+    Business._updateNavTabs(index);
     
     // 页面特定处理
-    if(index === 1) {
-      // 分析页面
-      Business.initAnalysisPage();
-    } else if(index === 2) {
-      // 记录页面
-      Business.renderFavoriteList();
-    } else if(index === 3) {
-      // 我的页面
-      Business.initProfilePage();
+    Business._handlePageSpecificLogic(index);
+  },
+
+  /**
+   * 更新导航标签
+   * @param {number} index - 导航索引
+   * @private
+   */
+  _updateNavTabs: (index) => {
+    const navTabs = document.getElementById('navTabs');
+    if(!navTabs) return;
+    
+    const tabsConfig = Business._navConfig.navTabs[index];
+    if(tabsConfig) {
+      navTabs.innerHTML = tabsConfig.map(tab => 
+        `<button class="nav-tab" data-target="${tab.target}" role="tab">${tab.label}</button>`
+      ).join('');
+      
+      // 绑定导航标签点击事件
+      Business._bindNavTabEvents(index);
+    } else {
+      navTabs.innerHTML = '';
+    }
+  },
+
+  /**
+   * 绑定导航标签事件
+   * @param {number} index - 导航索引
+   * @private
+   */
+  _bindNavTabEvents: (index) => {
+    const navTabs = document.getElementById('navTabs');
+    if(!navTabs) return;
+    
+    navTabs.querySelectorAll('.nav-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-target');
+        const targetEl = document.getElementById(targetId);
+        if(targetEl) {
+          // 分析页面标签切换逻辑
+          if(index === 1) {
+            Business._handleAnalysisTabSwitch(targetId);
+          }
+          
+          // 滚动到目标位置
+          const offset = 80; // 偏移量
+          window.scrollTo({top: targetEl.offsetTop - offset, behavior: 'smooth'});
+        }
+        Business.toggleQuickNav(false);
+      });
+    });
+  },
+
+  /**
+   * 处理分析页面标签切换
+   * @param {string} targetId - 目标ID
+   * @private
+   */
+  _handleAnalysisTabSwitch: (targetId) => {
+    // 移除所有标签和面板的active类
+    document.querySelectorAll('.analysis-tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    document.querySelectorAll('.analysis-tab-panel').forEach(panel => {
+      panel.classList.remove('active');
+    });
+    
+    // 根据目标ID激活对应的标签和面板
+    const tabId = Business._navConfig.analysisTabMap[targetId];
+    if(tabId) {
+      const tabEl = document.getElementById(tabId);
+      const panelEl = document.getElementById(targetId);
+      if(tabEl) tabEl.classList.add('active');
+      if(panelEl) panelEl.classList.add('active');
+    }
+  },
+
+  /**
+   * 处理页面特定逻辑
+   * @param {number} index - 导航索引
+   * @private
+   */
+  _handlePageSpecificLogic: (index) => {
+    switch(index) {
+      case 1:
+        // 分析页面
+        Business.initAnalysisPage();
+        break;
+      case 2:
+        // 记录页面
+        Business.renderFavoriteList();
+        break;
+      case 3:
+        // 我的页面
+        Business.initProfilePage();
+        break;
     }
   },
 
@@ -614,7 +671,14 @@ const Business = {
       return null;
     }
     
-    return Array.from(ballItems).map(ball => ball.innerText.trim()).join(' ');
+    // 优化：使用更高效的方式提取号码
+    let numbers = '';
+    ballItems.forEach((ball, index) => {
+      const number = ball.innerText.trim();
+      if(index > 0) numbers += ' ';
+      numbers += number;
+    });
+    return numbers;
   },
 
   /**
@@ -682,7 +746,6 @@ const Business = {
     }
     
     // 可以在这里添加更多我的页面初始化逻辑
-    console.log('我的页面初始化完成');
   },
 
   /**
