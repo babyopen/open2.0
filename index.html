@@ -1320,7 +1320,7 @@ const Utils = {
       }
     },
 
-    handleTouchStart: (e, idx, prefix) => {
+    handleTouchStart: function(e, idx, prefix) {
       const key = `${prefix}_${idx}`;
       const touch = e.touches[0];
       
@@ -1334,7 +1334,7 @@ const Utils = {
       Utils.SwipeRightCopyHandler._isRightSwipe[key] = false;
     },
 
-    handleTouchMove: (e, idx, prefix) => {
+    handleTouchMove: function(e, idx, prefix) {
       const key = `${prefix}_${idx}`;
       if (Utils.SwipeRightCopyHandler._startX[key] === undefined) return;
       
@@ -1401,7 +1401,7 @@ const Utils = {
       }
     },
 
-    handleTouchEnd: (e, idx, prefix, getTextCallback) => {
+    handleTouchEnd: function(e, idx, prefix, getTextCallback) {
       const key = `${prefix}_${idx}`;
       const item = e.currentTarget;
       
