@@ -1,13 +1,18 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 import sys
 import os
 import time
+import logging
 
 # 确保可以导入python目录中的模块
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'python')))
 
 from zodiac_ml_predictor import load_model, predict_next
 import pandas as pd
+
+# 配置日志
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -31,9 +36,9 @@ def load_model_once():
             # 模型文件路径
             model_path = os.path.join(os.path.dirname(__file__), '..', 'zodiac_model.pkl')
             model = load_model(model_path)
-            print("模型加载成功")
+            logger.info("模型加载成功")
         except Exception as e:
-            print(f"模型加载失败: {str(e)}")
+            logger.error(f"模型加载失败: {str(e)}")
             model = None
 
 def get_history_data():
@@ -192,7 +197,7 @@ def index():
         cached_frontend_files['index.html'] = html_content
         return html_content
     except Exception as e:
-        print(f"读取前端文件失败: {str(e)}")
+        logger.error(f"读取前端文件失败: {str(e)}")
         return jsonify({'error': '无法加载前端页面'}), 500
 
 @app.route('/style.css', methods=['GET'])
@@ -212,7 +217,7 @@ def style_css():
         cached_frontend_files['style.css'] = (css_content, 200, {'Content-Type': 'text/css'})
         return css_content, 200, {'Content-Type': 'text/css'}
     except Exception as e:
-        print(f"读取样式文件失败: {str(e)}")
+        logger.error(f"读取样式文件失败: {str(e)}")
         return jsonify({'error': '无法加载样式文件'}), 500
 
 # 应用入口点

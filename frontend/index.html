@@ -10558,12 +10558,12 @@ const EventBinder = {
    */
   showDeleteConfirmModal: (target) => {
     const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
+    modal.className = 'modal-overlay delete-confirm-modal';
     modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;transition:opacity 0.3s ease;';
     
     const content = document.createElement('div');
     content.className = 'modal-content';
-    content.style.cssText = 'background:var(--card);border-radius:12px;padding:20px;min-width:280px;max-width:90%;transform:scale(0.9);transition:transform 0.3s ease;';
+    content.style.cssText = 'background:var(--card);border-radius:12px;padding:20px;min-width:280px;max-width:90%;transform:scale(0.9);transition:transform 0.3s ease;box-shadow:0 10px 25px rgba(0,0,0,0.2);';
     
     content.innerHTML = `
       <div style="text-align:center;margin-bottom:20px;">
@@ -10572,16 +10572,24 @@ const EventBinder = {
         <div style="color:var(--sub-text);font-size:14px;">确定要删除这条记录吗？<br>此操作无法撤销</div>
       </div>
       <div style="display:flex;gap:12px;">
-        <button class="btn" onclick="this.closest('.modal-overlay').remove()" style="flex:1;padding:12px;background:var(--bg);border:none;border-radius:8px;font-size:16px;cursor:pointer;">取消</button>
-        <button class="btn btn-danger" id="confirmDeleteBtn" style="flex:1;padding:12px;background:var(--danger);color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;">确认删除</button>
+        <button class="btn btn-secondary" style="flex:1;padding:12px;background:var(--bg);border:none;border-radius:8px;font-size:16px;cursor:pointer;transition:background 0.2s ease;">取消</button>
+        <button class="btn btn-danger" style="flex:1;padding:12px;background:var(--danger);color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;transition:background 0.2s ease;">确认删除</button>
       </div>
     `;
     
     modal.appendChild(content);
     document.body.appendChild(modal);
     
-    // 绑定确认删除按钮事件
-    const confirmBtn = content.querySelector('#confirmDeleteBtn');
+    // 绑定按钮事件
+    const cancelBtn = content.querySelector('.btn-secondary');
+    const confirmBtn = content.querySelector('.btn-danger');
+    
+    cancelBtn.onclick = () => {
+      modal.style.opacity = '0';
+      content.style.transform = 'scale(0.9)';
+      setTimeout(() => modal.remove(), 300);
+    };
+    
     confirmBtn.onclick = () => {
       // 查找对应的删除按钮并触发点击
       const deleteBtn = target.querySelector('.special-history-delete');
@@ -10600,9 +10608,7 @@ const EventBinder = {
     // 点击遮罩关闭
     modal.addEventListener('click', (e) => {
       if(e.target === modal) {
-        modal.style.opacity = '0';
-        content.style.transform = 'scale(0.9)';
-        setTimeout(() => modal.remove(), 300);
+        cancelBtn.click();
       }
     });
   }
