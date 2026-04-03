@@ -10687,7 +10687,14 @@ async function initApp() {
 }
 
 // 页面加载完成后启动应用
-window.addEventListener('DOMContentLoaded', initApp);
+window.addEventListener('DOMContentLoaded', function() {
+  // 检查是否在错误页面中运行，避免跨域请求问题
+  if (window.location.protocol === 'chrome-error:') {
+    console.warn('应用在错误页面中运行，跳过初始化');
+    return;
+  }
+  initApp();
+});
 </script>
 </body>
 </html>
