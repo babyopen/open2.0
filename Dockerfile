@@ -2,10 +2,15 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# 安装系统依赖
+# 安装系统依赖（包括编译工具和机器学习库依赖）
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
+    gfortran \
+    libopenblas-dev \
+    liblapack-dev \
+    libgomp1 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # 复制依赖文件
