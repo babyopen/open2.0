@@ -902,7 +902,9 @@ const CONFIG = Object.freeze({
   DATA_VERSION: 1, // 数据版本号，用于后续数据迁移
   // API配置
   API: Object.freeze({
-    HISTORY: 'https://history.macaumarksix.com/history/macaujc2/y/'
+    HISTORY: '/api/lottery/history',
+    LATEST: '/api/lottery/latest',
+    ZODIAC: '/api/lottery/zodiac'
   }),
   // 动画配置
   TOAST_DURATION: 2000,
@@ -3500,60 +3502,73 @@ const Business = {
     
     try {
       const year = new Date().getFullYear();
-      const res = await fetch(CONFIG.API.HISTORY + year);
+      const res = await fetch(`${CONFIG.API.HISTORY}?year=${year}`);
       const data = await res.json();
-      let rawData = data.data || [];
+      
+      if(data.status === 'success') {
+        const sortedData = data.data || [];
 
-      // 过滤无效数据
-      rawData = rawData.filter(item => {
-        const expect = item.expect || '';
-        const openCode = item.openCode || '';
-        return expect && openCode && openCode.split(',').length === 7;
-      });
+        // 更新状态
+        const newAnalysis = { ...StateManager._state.analysis, historyData: sortedData };
+        StateManager.setState({ analysis: newAnalysis }, false);
 
-      // 去重并排序
-      const uniqueMap = new Map();
-      rawData.forEach(item => {
-        const expectNum = Number(item.expect || 0);
-        if(expectNum && !isNaN(expectNum)) {
-          uniqueMap.set(expectNum, item);
+        // 保存到缓存
+        Storage.saveHistoryCache(sortedData);
+
+        // 渲染
+        if(sortedData.length > 0) {
+          Business.renderLatest(sortedData[0]);
         }
-      });
-
-      const sortedData = Array.from(uniqueMap.values()).sort((a, b) => {
-        return Number(b.expect || 0) - Number(a.expect || 0);
-      });
-
-      // 更新状态
-      const newAnalysis = { ...StateManager._state.analysis, historyData: sortedData };
-      StateManager.setState({ analysis: newAnalysis }, false);
-
-      // 保存到缓存
-      Storage.saveHistoryCache(sortedData);
-
-      // 渲染
-      Business.renderLatest(sortedData[0]);
-      Business.renderHistory();
-      Business.renderFullAnalysis();
-      Business.renderZodiacAnalysis();
-      
-      // 更新冷热号状态
-      Business.updateHotColdStatus();
-      
-      // 静默更新所有期数的预测历史
-      Business.silentUpdateAllPredictionHistory();
-      // 同时更新精选特码历史的开奖记录比较
-      Business.updateSpecialHistoryComparison();
-      // 重新渲染精选特码历史以显示最新比较结果
-      Business.renderSpecialHistory();
-      
-      if(!silent) Toast.show('数据加载成功');
+        Business.renderHistory();
+        Business.renderFullAnalysis();
+        Business.renderZodiacAnalysis();
+        
+        // 更新冷热号状态
+        Business.updateHotColdStatus();
+        
+        // 静默更新所有期数的预测历史
+        Business.silentUpdateAllPredictionHistory();
+        // 同时更新精选特码历史的开奖记录比较
+        Business.updateSpecialHistoryComparison();
+        // 重新渲染精选特码历史以显示最新比较结果
+        Business.renderSpecialHistory();
+        
+        if(!silent) Toast.show('数据加载成功');
+      }
     } catch(e) {
       console.error('加载历史数据失败', e);
-      if(historyList && !silent) {
-        historyList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger);">数据加载失败，请刷新重试</div>';
+      let errorMessage = '数据加载失败，请刷新重试';
+      if(e.response) {
+        try {
+          e.response.json().then(errorData => {
+            if(errorData.message) {
+              errorMessage = errorData.message;
+            }
+            if(historyList && !silent) {
+              historyList.innerHTML = `<div style="padding:20px;text-align:center;color:var(--danger);">${errorMessage}</div>`;
+            }
+            if(!silent) Toast.show(errorMessage);
+          }).catch(() => {
+            // 解析错误时使用默认消息
+            if(historyList && !silent) {
+              historyList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger);">数据加载失败，请刷新重试</div>';
+            }
+            if(!silent) Toast.show('数据加载失败');
+          });
+        } catch {
+          // 忽略解析错误
+          if(historyList && !silent) {
+            historyList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger);">数据加载失败，请刷新重试</div>';
+          }
+          if(!silent) Toast.show('数据加载失败');
+        }
+      } else {
+        // 网络错误或其他错误
+        if(historyList && !silent) {
+          historyList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger);">网络连接失败，请检查网络后重试</div>';
+        }
+        if(!silent) Toast.show('网络连接失败，请检查网络后重试');
       }
-      if(!silent) Toast.show('数据加载失败');
     }
     
     const loadMore = document.getElementById('loadMore');
@@ -6134,7 +6149,7 @@ const Business = {
       }));
       
       // 调用ML API
-      const response = await fetch('http://localhost:5001/api/predict', {
+      const response = await fetch('/api/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
