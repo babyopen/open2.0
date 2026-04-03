@@ -6905,6 +6905,8 @@ const Business = {
 
   /**
    * 获取预测统计数据
+   * 将预测统计明确划分为三个独立类别：生肖预测、精选生肖、ML预测
+   * 每个类别独立计算：总预测数、命中数、命中率
    * @returns {Object} 统计结果
    */
   getPredictionStatistics: () => {
@@ -6913,40 +6915,16 @@ const Business = {
       const mlHistory = Storage.get(Storage.KEYS.ML_PREDICTION_HISTORY, []);
       const selectedZodiacHistory = StateManager._state.selectedZodiacHistory || [];
       
-      const allHistory = [...zodiacHistory, ...mlHistory, ...selectedZodiacHistory];
-      
-      const completed = allHistory.filter(r => {
-        if (r.status === Storage.PREDICTION_STATUS.HIT || r.status === Storage.PREDICTION_STATUS.MISS) {
-          return true;
-        }
-        if (r.actualZodiac !== null && r.actualZodiac !== undefined) {
-          return true;
-        }
-        return false;
-      });
-      
-      const hits = completed.filter(r => {
-        if (r.isHit !== undefined) {
-          return r.isHit;
-        }
-        return false;
-      });
-      
-      const pending = allHistory.filter(r => {
-        if (r.status === Storage.PREDICTION_STATUS.PENDING) {
-          return true;
-        }
-        if (r.actualZodiac === null || r.actualZodiac === undefined) {
-          return true;
-        }
-        return false;
-      });
-      
-      const hitRate = completed.length > 0 ? (hits.length / completed.length * 100).toFixed(1) : 0;
-      
-      const getStatsByType = (history) => {
+      /**
+       * 计算单个类别的完整统计数据
+       * @param {Array} history - 历史记录数组
+       * @returns {Object} 该类别的统计数据
+       */
+      const calculateCategoryStats = (history) => {
         const h = history || [];
-        const comp = h.filter(r => {
+        
+        // 已完成（已开奖）的记录
+        const completed = h.filter(r => {
           if (r.status === Storage.PREDICTION_STATUS.HIT || r.status === Storage.PREDICTION_STATUS.MISS) {
             return true;
           }
@@ -6955,25 +6933,61 @@ const Business = {
           }
           return false;
         });
-        const hitCount = comp.filter(r => r.isHit).length;
-        return { total: h.length, hits: hitCount };
+        
+        // 命中数
+        const hits = completed.filter(r => r.isHit === true).length;
+        
+        // 未命中数
+        const misses = completed.length - hits;
+        
+        // 待开奖数
+        const pending = h.length - completed.length;
+        
+        // 命中率（命中数/已完成数×100%）
+        const hitRate = completed.length > 0 ? (hits / completed.length * 100).toFixed(1) : 0;
+        
+        return {
+          total: h.length,
+          completed: completed.length,
+          hits: hits,
+          misses: misses,
+          pending: pending,
+          hitRate: hitRate
+        };
       };
       
+      // 分别计算三个类别的统计数据
+      const zodiacStats = calculateCategoryStats(zodiacHistory);
+      const mlStats = calculateCategoryStats(mlHistory);
+      const selectedStats = calculateCategoryStats(selectedZodiacHistory);
+      
+      // 计算总体统计数据
+      const totalPredictions = zodiacStats.total + mlStats.total + selectedStats.total;
+      const totalCompleted = zodiacStats.completed + mlStats.completed + selectedStats.completed;
+      const totalHits = zodiacStats.hits + mlStats.hits + selectedStats.hits;
+      const totalMisses = zodiacStats.misses + mlStats.misses + selectedStats.misses;
+      const totalPending = zodiacStats.pending + mlStats.pending + selectedStats.pending;
+      const totalHitRate = totalCompleted > 0 ? (totalHits / totalCompleted * 100).toFixed(1) : 0;
+      
       return {
-        total: allHistory.length,
-        completed: completed.length,
-        hits: hits.length,
-        misses: completed.length - hits.length,
-        pending: pending.length,
-        hitRate: hitRate,
+        // 总体统计
+        total: totalPredictions,
+        completed: totalCompleted,
+        hits: totalHits,
+        misses: totalMisses,
+        pending: totalPending,
+        hitRate: totalHitRate,
+        // 分类统计（各类别独立计算）
         byType: {
-          zodiac: getStatsByType(zodiacHistory),
-          ml: getStatsByType(mlHistory),
-          selected: getStatsByType(selectedZodiacHistory)
+          zodiac: zodiacStats,
+          ml: mlStats,
+          selected: selectedStats
         }
       };
     } catch (e) {
       console.error('获取预测统计失败', e);
+      // 返回默认空统计
+      const emptyStats = { total: 0, completed: 0, hits: 0, misses: 0, pending: 0, hitRate: 0 };
       return {
         total: 0,
         completed: 0,
@@ -6982,9 +6996,9 @@ const Business = {
         pending: 0,
         hitRate: 0,
         byType: { 
-          zodiac: { total: 0, hits: 0 }, 
-          ml: { total: 0, hits: 0 },
-          selected: { total: 0, hits: 0 }
+          zodiac: { ...emptyStats }, 
+          ml: { ...emptyStats },
+          selected: { ...emptyStats }
         }
       };
     }
@@ -7140,36 +7154,77 @@ const Business = {
       if (stats.byType.zodiac.total > 0 || stats.byType.ml.total > 0 || stats.byType.selected.total > 0) {
         html += `
           <div style="margin-top:16px;">
-            <div style="font-size:14px;color:var(--text);font-weight:600;margin-bottom:12px;">📌 分类统计</div>
+            <div style="font-size:14px;color:var(--text);font-weight:600;margin-bottom:12px;">📌 分类统计（各类别独立计算）</div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+              <!-- 生肖预测统计 -->
               <div style="padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                   <span style="color:var(--sub-text);">🔮 生肖预测</span>
                   <span style="font-weight:600;">${stats.byType.zodiac.total} 次</span>
                 </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                   <span style="color:var(--sub-text);">命中</span>
                   <span style="color:#4CAF50;font-weight:600;">${stats.byType.zodiac.hits}</span>
                 </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <span style="color:var(--sub-text);">未中</span>
+                  <span style="color:#F44336;font-weight:600;">${stats.byType.zodiac.misses}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <span style="color:var(--sub-text);">待开奖</span>
+                  <span style="color:#FF9800;font-weight:600;">${stats.byType.zodiac.pending}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px solid var(--border);">
+                  <span style="color:var(--text);font-weight:600;">命中率</span>
+                  <span style="color:var(--primary);font-weight:700;font-size:16px;">${stats.byType.zodiac.hitRate}%</span>
+                </div>
               </div>
+              
+              <!-- ML预测统计 -->
               <div style="padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                   <span style="color:var(--sub-text);">🤖 ML预测</span>
                   <span style="font-weight:600;">${stats.byType.ml.total} 次</span>
                 </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                   <span style="color:var(--sub-text);">命中</span>
                   <span style="color:#4CAF50;font-weight:600;">${stats.byType.ml.hits}</span>
                 </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <span style="color:var(--sub-text);">未中</span>
+                  <span style="color:#F44336;font-weight:600;">${stats.byType.ml.misses}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <span style="color:var(--sub-text);">待开奖</span>
+                  <span style="color:#FF9800;font-weight:600;">${stats.byType.ml.pending}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px solid var(--border);">
+                  <span style="color:var(--text);font-weight:600;">命中率</span>
+                  <span style="color:var(--primary);font-weight:700;font-size:16px;">${stats.byType.ml.hitRate}%</span>
+                </div>
               </div>
+              
+              <!-- 精选生肖统计 -->
               <div style="padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                   <span style="color:var(--sub-text);">✨ 精选生肖</span>
                   <span style="font-weight:600;">${stats.byType.selected.total} 次</span>
                 </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                   <span style="color:var(--sub-text);">命中</span>
                   <span style="color:#4CAF50;font-weight:600;">${stats.byType.selected.hits}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <span style="color:var(--sub-text);">未中</span>
+                  <span style="color:#F44336;font-weight:600;">${stats.byType.selected.misses}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <span style="color:var(--sub-text);">待开奖</span>
+                  <span style="color:#FF9800;font-weight:600;">${stats.byType.selected.pending}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px solid var(--border);">
+                  <span style="color:var(--text);font-weight:600;">命中率</span>
+                  <span style="color:var(--primary);font-weight:700;font-size:16px;">${stats.byType.selected.hitRate}%</span>
                 </div>
               </div>
             </div>
