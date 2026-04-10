@@ -3412,6 +3412,9 @@ const Business = {
         
         Toast.show('已从缓存加载数据');
         
+        // 显示最新的ML预测历史
+        setTimeout(() => Business.showLatestMLPrediction(), 100);
+        
         // 后台静默刷新
         setTimeout(() => Business.silentRefreshHistory(), 2000);
       } else {
@@ -3425,6 +3428,9 @@ const Business = {
       Business.renderFullAnalysis();
       Business.renderZodiacAnalysis();
       Business.updateHotColdStatus();
+      
+      // 显示最新的ML预测历史
+      setTimeout(() => Business.showLatestMLPrediction(), 100);
     }
     Business.startCountdown();
     Business.startAutoRefresh();
@@ -3500,15 +3506,15 @@ const Business = {
     
     try {
       // 尝试从缓存加载数据
-      const cachedData = Storage.getHistoryCache();
-      if(cachedData && cachedData.length > 0) {
+      const cacheResult = Storage.loadHistoryCache();
+      if(!cacheResult.expired && cacheResult.data && cacheResult.data.length > 0) {
         console.log('使用缓存的历史数据');
         // 更新状态
-        const newAnalysis = { ...StateManager._state.analysis, historyData: cachedData };
+        const newAnalysis = { ...StateManager._state.analysis, historyData: cacheResult.data };
         StateManager.setState({ analysis: newAnalysis }, false);
 
         // 渲染
-        Business.renderLatest(cachedData[0]);
+        Business.renderLatest(cacheResult.data[0]);
         Business.renderHistory();
         Business.renderFullAnalysis();
         Business.renderZodiacAnalysis();
@@ -4378,10 +4384,10 @@ const Business = {
     const zodiacScores = {};
     const zodiacDetails = {};
 
-    // 1. 热号状态分析 (0-20分)
+    // 1. 热号状态分析 (0-35分) - 提高权重
     const hotZodiacs = topZod.slice(0, 3).map(z => z[0]);
     
-    // 2. 冷号状态分析 (0-30分) - 需要更长历史数据
+    // 2. 冷号状态分析 (0-15分) - 降低权重
     let maxMiss = 0;
     Object.values(zodMiss).forEach(m => { if(m > maxMiss) maxMiss = m; });
 
@@ -4428,23 +4434,23 @@ const Business = {
       let score = 0;
       const details = { cold: 0, hot: 0, shape: 0, interval: 0 };
 
-      // 冷号状态 (0-30分)
+      // 冷号状态 (0-15分) - 降低权重
       const missValue = zodMiss[zod] || 0;
       if(maxMiss > 0 && missValue >= maxMiss * 0.8) {
-        details.cold = 30;
-        score += 30;
+        details.cold = 15;
+        score += 15;
       } else if(missValue >= 24) {
-        details.cold = 20;
-        score += 20;
-      } else if(missValue >= 12) {
         details.cold = 10;
         score += 10;
+      } else if(missValue >= 12) {
+        details.cold = 5;
+        score += 5;
       }
 
-      // 热号状态 (0-20分)
+      // 热号状态 (0-35分) - 提高权重
       if(hotZodiacs.includes(zod)) {
-        details.hot = 20;
-        score += 20;
+        details.hot = 35;
+        score += 35;
       }
 
       // 形态匹配 (0-30分) - 五行相生
@@ -6178,12 +6184,13 @@ const Business = {
    * 生肖预测2.0 - 运行ML预测
    */
   runMLPrediction: async () => {
+    // 在函数开头声明所有变量，确保在catch/finally块中可访问
+    const mlBtn = document.querySelector('.ml-predict-btn');
+    const resultContainer = document.getElementById('mlPredictionResult');
+    const contentContainer = document.getElementById('mlPredictionContent');
+    
     try {
       // 显示加载状态
-      const mlBtn = document.querySelector('.ml-predict-btn');
-      const resultContainer = document.getElementById('mlPredictionResult');
-      const contentContainer = document.getElementById('mlPredictionContent');
-      
       if(mlBtn) {
         mlBtn.disabled = true;
         mlBtn.innerHTML = '<span style="display:inline-block;animation:spin 1s linear infinite;">⚡</span> 预测中...';
@@ -6216,8 +6223,8 @@ const Business = {
         zodiac: item.zodiac  // 直接传递生肖名称字符串
       }));
       
-      // 调用ML API
-      const response = await fetch('http://127.0.0.1:8000/api/predict', {
+      // 调用ML API - 使用正确的端口5001
+      const response = await fetch('http://127.0.0.1:5001/api/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -6241,6 +6248,14 @@ const Business = {
         return;
       }
       
+      // 添加期号信息
+      if(state.analysis.historyData && state.analysis.historyData[0]) {
+        const currentExpect = state.analysis.historyData[0].expect;
+        if(currentExpect) {
+          result.expect = String(Number(currentExpect) + 1);
+        }
+      }
+      
       // 显示预测结果
       Business.displayMLPredictionResult(result);
       
@@ -6252,7 +6267,6 @@ const Business = {
       }
     } finally {
       // 恢复按钮状态
-      const mlBtn = document.querySelector('.ml-predict-btn');
       if(mlBtn) {
         mlBtn.disabled = false;
         mlBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> ML预测`;
@@ -6275,7 +6289,14 @@ const Business = {
     
     // 更新时间
     const now = new Date();
-    timeContainer.textContent = `预测时间: ${now.toLocaleString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+    let timeText = `预测时间: ${now.toLocaleString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+    
+    // 如果有期号，添加期号标注
+    if(result.expect) {
+      timeText = `第${result.expect}期 · ${timeText}`;
+    }
+    
+    timeContainer.textContent = timeText;
     
     // 生成结果HTML
     let html = '';
@@ -6338,6 +6359,101 @@ const Business = {
     
     // 滚动到结果区域
     resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  },
+
+  /**
+   * 显示最新的ML预测历史记录
+   */
+  showLatestMLPrediction: () => {
+    try {
+      const history = Storage.get(Storage.KEYS.ML_PREDICTION_HISTORY, []);
+      if(history.length === 0) return;
+      
+      const latest = history[0];
+      if(!latest) return;
+      
+      const resultContainer = document.getElementById('mlPredictionResult');
+      const contentContainer = document.getElementById('mlPredictionContent');
+      const timeContainer = document.getElementById('mlPredictionTime');
+      
+      if(!resultContainer || !contentContainer) return;
+      
+      // 构建显示对象
+      const result = {
+        expect: latest.expect,
+        top3: latest.top3 || [],
+        predictions: latest.predictions || [],
+        time: latest.time
+      };
+      
+      // 显示容器
+      resultContainer.style.display = 'block';
+      
+      // 更新时间
+      let timeText = latest.time ? `预测时间: ${latest.time}` : '';
+      if(latest.expect) {
+        timeText = `第${latest.expect}期 · ${timeText}`;
+      }
+      timeContainer.textContent = timeText;
+      
+      // 生成结果HTML
+      let html = '';
+      
+      // Top 3 推荐
+      if(result.top3 && result.top3.length > 0) {
+        html += '<div style="margin-bottom:15px;">';
+        html += '<div style="font-size:14px;margin-bottom:8px;opacity:0.9;">🏆 Top 3 推荐</div>';
+        html += '<div style="display:flex;gap:10px;flex-wrap:wrap;">';
+        
+        result.top3.forEach((item, index) => {
+          const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+          const width = Math.round(item.probability * 100);
+          html += `
+            <div style="flex:1;min-width:100px;background:rgba(255,255,255,0.2);border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-size:20px;margin-bottom:4px;">${rankEmoji}</div>
+              <div style="font-size:18px;font-weight:bold;margin-bottom:4px;">${item.name}</div>
+              <div style="font-size:12px;opacity:0.8;margin-bottom:4px;">${item.element ? item.element : ''}${item.element && item.color ? '·' : ''}${item.color ? item.color : ''}</div>
+              <div style="background:rgba(255,255,255,0.3);border-radius:4px;height:6px;margin-bottom:4px;">
+                <div style="background:#FFD700;height:100%;border-radius:4px;width:${width}%;"></div>
+              </div>
+              <div style="font-size:14px;font-weight:bold;">${(item.probability * 100).toFixed(2)}%</div>
+            </div>
+          `;
+        });
+        
+        html += '</div></div>';
+      }
+      
+      // 所有生肖概率条形图
+      if(result.predictions && result.predictions.length > 0) {
+        html += '<div style="margin-top:15px;">';
+        html += '<div style="font-size:14px;margin-bottom:8px;opacity:0.9;">📊 所有生肖概率分布</div>';
+        html += '<div style="display:grid;grid-template-columns:repeat(6, 1fr);gap:8px;">';
+        
+        result.predictions.forEach(item => {
+          const width = Math.round(item.probability * 100);
+          const isTop3 = result.top3.some(t => t.id === item.id);
+          const bgColor = isTop3 ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.1)';
+          const borderColor = isTop3 ? '#FFD700' : 'transparent';
+          
+          html += `
+            <div style="background:${bgColor};border:1px solid ${borderColor};border-radius:6px;padding:6px;text-align:center;font-size:11px;">
+              <div style="font-weight:bold;margin-bottom:2px;">${item.name}</div>
+              <div style="background:rgba(255,255,255,0.2);border-radius:2px;height:4px;margin-bottom:2px;">
+                <div style="background:${isTop3 ? '#FFD700' : '#fff'};height:100%;border-radius:2px;width:${width}%;"></div>
+              </div>
+              <div>${(item.probability * 100).toFixed(1)}%</div>
+            </div>
+          `;
+        });
+        
+        html += '</div></div>';
+      }
+      
+      contentContainer.innerHTML = html;
+    } catch(e) {
+      console.error('显示最新ML预测失败', e);
+    }
   },
 
   /**

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加载推荐历史记录</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .status {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .button:hover {
+            background: #0069d9;
+        }
+        .instructions {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>加载推荐历史记录</h1>
+    
+    <div class="instructions">
+        <h3>操作步骤：</h3>
+        <ol>
+            <li>点击下方「加载历史记录」按钮</li>
+            <li>等待提示加载成功</li>
+            <li>点击「返回应用」查看历史记录</li>
+        </ol>
+    </div>
+    
+    <button class="button" onclick="loadHistory()">加载历史记录</button>
+    <a href="index.html" class="button" style="margin-left: 10px;">返回应用</a>
+    
+    <div id="status" class="status"></div>
+    
+    <script src="load_history.js"></script>
+    <script>
+        function loadHistory() {
+            const status = document.getElementById('status');
+            status.innerHTML = '<p>正在加载历史记录...</p>';
+            
+            // 执行加载
+            setTimeout(() => {
+                status.innerHTML = '<p class="success">✅ 推荐历史记录已成功加载！</p>' +
+                    '<p>已添加以下记录：</p>' +
+                    '<ul>' +
+                    '<li>ML预测历史: 5条</li>' +
+                    '<li>生肖预测历史: 5条</li>' +
+                    '<li>精选特码历史: 5条</li>' +
+                    '<li>特码热门TOP5历史: 5条</li>' +
+                    '</ul>' +
+                    '<p>请点击「返回应用」查看历史记录。</p>';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

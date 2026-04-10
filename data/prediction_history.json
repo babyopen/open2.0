@@ -1,0 +1,575 @@
+{
+  "mlPredictionHistory": [
+    {
+      "id": "ml_1775749626831",
+      "time": "2026-04-09 23:47:06",
+      "timestamp": 1775749626831,
+      "predictions": [
+        {
+          "id": 7,
+          "name": "鼠",
+          "probability": 0.1221,
+          "element": "水",
+          "color": "红"
+        },
+        {
+          "id": 11,
+          "name": "猴",
+          "probability": 0.1169,
+          "element": "金",
+          "color": "蓝"
+        },
+        {
+          "id": 6,
+          "name": "牛",
+          "probability": 0.1008,
+          "element": "土",
+          "color": "绿"
+        }
+      ],
+      "top3": [
+        {
+          "id": 7,
+          "name": "鼠",
+          "probability": 0.1221,
+          "element": "水",
+          "color": "红"
+        },
+        {
+          "id": 11,
+          "name": "猴",
+          "probability": 0.1169,
+          "element": "金",
+          "color": "蓝"
+        },
+        {
+          "id": 6,
+          "name": "牛",
+          "probability": 0.1008,
+          "element": "土",
+          "color": "绿"
+        }
+      ],
+      "recommendation": {
+        "id": 7,
+        "name": "鼠",
+        "probability": 0.1221,
+        "element": "水",
+        "color": "红"
+      },
+      "period": "2026100",
+      "source": "ML模型"
+    },
+    {
+      "id": "ml_1775749626934",
+      "time": "2026-04-09 23:47:06",
+      "timestamp": 1775749626934,
+      "predictions": [
+        {
+          "id": 7,
+          "name": "鼠",
+          "probability": 0.1221,
+          "element": "水",
+          "color": "红"
+        },
+        {
+          "id": 11,
+          "name": "猴",
+          "probability": 0.1169,
+          "element": "金",
+          "color": "蓝"
+        },
+        {
+          "id": 6,
+          "name": "牛",
+          "probability": 0.1008,
+          "element": "土",
+          "color": "绿"
+        }
+      ],
+      "top3": [
+        {
+          "id": 7,
+          "name": "鼠",
+          "probability": 0.1221,
+          "element": "水",
+          "color": "红"
+        },
+        {
+          "id": 11,
+          "name": "猴",
+          "probability": 0.1169,
+          "element": "金",
+          "color": "蓝"
+        },
+        {
+          "id": 6,
+          "name": "牛",
+          "probability": 0.1008,
+          "element": "土",
+          "color": "绿"
+        }
+      ],
+      "recommendation": {
+        "id": 7,
+        "name": "鼠",
+        "probability": 0.1221,
+        "element": "水",
+        "color": "红"
+      },
+      "period": "202699",
+      "source": "ML模型"
+    },
+    {
+      "id": "ml_1775749627035",
+      "time": "2026-04-09 23:47:07",
+      "timestamp": 1775749627035,
+      "predictions": [
+        {
+          "id": 7,
+          "name": "鼠",
+          "probability": 0.1221,
+          "element": "水",
+          "color": "红"
+        },
+        {
+          "id": 11,
+          "name": "猴",
+          "probability": 0.1169,
+          "element": "金",
+          "color": "蓝"
+        },
+        {
+          "id": 6,
+          "name": "牛",
+          "probability": 0.1008,
+          "element": "土",
+          "color": "绿"
+        }
+      ],
+      "top3": [
+        {
+          "id": 7,
+          "name": "鼠",
+          "probability": 0.1221,
+          "element": "水",
+          "color": "红"
+        },
+        {
+          "id": 11,
+          "name": "猴",
+          "probability": 0.1169,
+          "element": "金",
+          "color": "蓝"
+        },
+        {
+          "id": 6,
+          "name": "牛",
+          "probability": 0.1008,
+          "element": "土",
+          "color": "绿"
+        }
+      ],
+      "recommendation": {
+        "id": 7,
+        "name": "鼠",
+        "probability": 0.1221,
+        "element": "水",
+        "color": "红"
+      },
+      "period": "202698",
+      "source": "ML模型"
+    },
+    {
+      "id": "ml_1775749627135",
+      "time": "2026-04-09 23:47:07",
+      "timestamp": 1775749627135,
+      "predictions": [
+        {
+          "id": 7,
+          "name": "鼠",
+          "probability": 0.1221,
+          "element": "水",
+          "color": "红"
+        },
+        {
+          "id": 11,
+          "name": "猴",
+          "probability": 0.1169,
+          "element": "金",
+          "color": "蓝"
+        },
+        {
+          "id": 6,
+          "name": "牛",
+          "probability": 0.1008,
+          "element": "土",
+          "color": "绿"
+        }
+      ],
+      "top3": [
+        {
+          "id": 7,
+          "name": "鼠",
+          "probability": 0.1221,
+          "element": "水",
+          "color": "红"
+        },
+        {
+          "id": 11,
+          "name": "猴",
+          "probability": 0.1169,
+          "element": "金",
+          "color": "蓝"
+        },
+        {
+          "id": 6,
+          "name": "牛",
+          "probability": 0.1008,
+          "element": "土",
+          "color": "绿"
+        }
+      ],
+      "recommendation": {
+        "id": 7,
+        "name": "鼠",
+        "probability": 0.1221,
+        "element": "水",
+        "color": "红"
+      },
+      "period": "202697",
+      "source": "ML模型"
+    },
+    {
+      "id": "ml_1775749627240",
+      "time": "2026-04-09 23:47:07",
+      "timestamp": 1775749627240,
+      "predictions": [
+        {
+          "id": 7,
+          "name": "鼠",
+          "probability": 0.1221,
+          "element": "水",
+          "color": "红"
+        },
+        {
+          "id": 11,
+          "name": "猴",
+          "probability": 0.1169,
+          "element": "金",
+          "color": "蓝"
+        },
+        {
+          "id": 6,
+          "name": "牛",
+          "probability": 0.1008,
+          "element": "土",
+          "color": "绿"
+        }
+      ],
+      "top3": [
+        {
+          "id": 7,
+          "name": "鼠",
+          "probability": 0.1221,
+          "element": "水",
+          "color": "红"
+        },
+        {
+          "id": 11,
+          "name": "猴",
+          "probability": 0.1169,
+          "element": "金",
+          "color": "蓝"
+        },
+        {
+          "id": 6,
+          "name": "牛",
+          "probability": 0.1008,
+          "element": "土",
+          "color": "绿"
+        }
+      ],
+      "recommendation": {
+        "id": 7,
+        "name": "鼠",
+        "probability": 0.1221,
+        "element": "水",
+        "color": "红"
+      },
+      "period": "202696",
+      "source": "ML模型"
+    }
+  ],
+  "zodiacPredictionHistory": [
+    {
+      "id": "zodiac_1775749626831",
+      "time": "2026-04-09 23:47:06",
+      "timestamp": 1775749626831,
+      "period": "2026100",
+      "predictions": [
+        {
+          "id": 7,
+          "name": "鼠",
+          "probability": 0.12
+        },
+        {
+          "id": 11,
+          "name": "猴",
+          "probability": 0.11
+        },
+        {
+          "id": 6,
+          "name": "牛",
+          "probability": 0.1
+        }
+      ],
+      "source": "传统算法"
+    },
+    {
+      "id": "zodiac_1775749626934",
+      "time": "2026-04-09 23:47:06",
+      "timestamp": 1775749626934,
+      "period": "202699",
+      "predictions": [
+        {
+          "id": 7,
+          "name": "鼠",
+          "probability": 0.12
+        },
+        {
+          "id": 11,
+          "name": "猴",
+          "probability": 0.11
+        },
+        {
+          "id": 6,
+          "name": "牛",
+          "probability": 0.1
+        }
+      ],
+      "source": "传统算法"
+    },
+    {
+      "id": "zodiac_1775749627035",
+      "time": "2026-04-09 23:47:07",
+      "timestamp": 1775749627035,
+      "period": "202698",
+      "predictions": [
+        {
+          "id": 7,
+          "name": "鼠",
+          "probability": 0.12
+        },
+        {
+          "id": 11,
+          "name": "猴",
+          "probability": 0.11
+        },
+        {
+          "id": 6,
+          "name": "牛",
+          "probability": 0.1
+        }
+      ],
+      "source": "传统算法"
+    },
+    {
+      "id": "zodiac_1775749627135",
+      "time": "2026-04-09 23:47:07",
+      "timestamp": 1775749627135,
+      "period": "202697",
+      "predictions": [
+        {
+          "id": 7,
+          "name": "鼠",
+          "probability": 0.12
+        },
+        {
+          "id": 11,
+          "name": "猴",
+          "probability": 0.11
+        },
+        {
+          "id": 6,
+          "name": "牛",
+          "probability": 0.1
+        }
+      ],
+      "source": "传统算法"
+    },
+    {
+      "id": "zodiac_1775749627240",
+      "time": "2026-04-09 23:47:07",
+      "timestamp": 1775749627241,
+      "period": "202696",
+      "predictions": [
+        {
+          "id": 7,
+          "name": "鼠",
+          "probability": 0.12
+        },
+        {
+          "id": 11,
+          "name": "猴",
+          "probability": 0.11
+        },
+        {
+          "id": 6,
+          "name": "牛",
+          "probability": 0.1
+        }
+      ],
+      "source": "传统算法"
+    }
+  ],
+  "specialHistory": [
+    {
+      "id": "special_1775749626831",
+      "time": "2026-04-09 23:47:06",
+      "timestamp": 1775749626831,
+      "period": "2026100",
+      "numbers": [
+        7,
+        11,
+        6,
+        8,
+        4
+      ],
+      "mode": "hot",
+      "count": 5
+    },
+    {
+      "id": "special_1775749626934",
+      "time": "2026-04-09 23:47:06",
+      "timestamp": 1775749626934,
+      "period": "202699",
+      "numbers": [
+        7,
+        11,
+        6,
+        8,
+        4
+      ],
+      "mode": "hot",
+      "count": 5
+    },
+    {
+      "id": "special_1775749627035",
+      "time": "2026-04-09 23:47:07",
+      "timestamp": 1775749627035,
+      "period": "202698",
+      "numbers": [
+        7,
+        11,
+        6,
+        8,
+        4
+      ],
+      "mode": "hot",
+      "count": 5
+    },
+    {
+      "id": "special_1775749627135",
+      "time": "2026-04-09 23:47:07",
+      "timestamp": 1775749627135,
+      "period": "202697",
+      "numbers": [
+        7,
+        11,
+        6,
+        8,
+        4
+      ],
+      "mode": "hot",
+      "count": 5
+    },
+    {
+      "id": "special_1775749627241",
+      "time": "2026-04-09 23:47:07",
+      "timestamp": 1775749627241,
+      "period": "202696",
+      "numbers": [
+        7,
+        11,
+        6,
+        8,
+        4
+      ],
+      "mode": "hot",
+      "count": 5
+    }
+  ],
+  "hotNumbersHistory": [
+    {
+      "id": "hot_1775749626831",
+      "time": "2026-04-09 23:47:06",
+      "timestamp": 1775749626831,
+      "period": "2026100",
+      "numbers": [
+        7,
+        11,
+        6,
+        8,
+        4
+      ],
+      "source": "综合分析"
+    },
+    {
+      "id": "hot_1775749626934",
+      "time": "2026-04-09 23:47:06",
+      "timestamp": 1775749626934,
+      "period": "202699",
+      "numbers": [
+        7,
+        11,
+        6,
+        8,
+        4
+      ],
+      "source": "综合分析"
+    },
+    {
+      "id": "hot_1775749627035",
+      "time": "2026-04-09 23:47:07",
+      "timestamp": 1775749627035,
+      "period": "202698",
+      "numbers": [
+        7,
+        11,
+        6,
+        8,
+        4
+      ],
+      "source": "综合分析"
+    },
+    {
+      "id": "hot_1775749627135",
+      "time": "2026-04-09 23:47:07",
+      "timestamp": 1775749627135,
+      "period": "202697",
+      "numbers": [
+        7,
+        11,
+        6,
+        8,
+        4
+      ],
+      "source": "综合分析"
+    },
+    {
+      "id": "hot_1775749627241",
+      "time": "2026-04-09 23:47:07",
+      "timestamp": 1775749627241,
+      "period": "202696",
+      "numbers": [
+        7,
+        11,
+        6,
+        8,
+        4
+      ],
+      "source": "综合分析"
+    }
+  ]
+}

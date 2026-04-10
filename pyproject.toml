@@ -1,7 +1,7 @@
 [project]
 name = "zodiac-lottery-predictor"
 version = "0.2.0"
-description = "生肖彩票预测 API"
+description = "预测 API"
 
 [project.scripts]
 app = "api.index:app"
