@@ -1,5 +1,5 @@
 <!-- 
-  小摇筛选 v26.6.1
+  小摇筛选 v26.6.2
   代码结构说明：
   - CONFIG: 配置常量模块
   - Utils: 工具函数模块（节流、防抖、深拷贝等）
@@ -19,7 +19,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#007AFF">
-<title>小摇筛选 v26.6.1</title>
+<title>小摇筛选 v26.6.2</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -34,7 +34,7 @@
     <div class="top-card">
       <div class="top-title">
         <span>符合条件：<span id="resultCount" aria-live="polite">0</span> 个</span>
-        <span>v26.6.1</span>
+        <span>v26.6.2</span>
       </div>
     <div id="resultNums" class="top-nums" role="list"></div>
   </div>
@@ -528,7 +528,7 @@
       <div class="card-body">
         <div style="text-align:center; padding:20px 0;">
           <div style="font-size:18px; font-weight:600; margin-bottom:8px;">小摇筛选</div>
-          <div style="color:var(--sub-text); font-size:14px;">版本：V26.6.1</div>
+          <div style="color:var(--sub-text); font-size:14px;">版本：V26.6.2</div>
           <div style="color:var(--sub-text); font-size:12px; margin-top:16px;">仅供娱乐，非投注建议</div>
         </div>
       </div>
@@ -902,7 +902,7 @@
  * @enum {any}
  */
 const CONFIG = Object.freeze({
-  VERSION: 'V26.6.1',
+  VERSION: 'V26.6.2',
   DATA_VERSION: 1, // 数据版本号，用于后续数据迁移
   // API配置
   API: Object.freeze({
@@ -4394,14 +4394,64 @@ const Business = {
     const zodiacScores = {};
     const zodiacDetails = {};
 
-    // 1. 热号状态分析 (0-35分) - 提高权重
-    const hotZodiacs = topZod.slice(0, 3).map(z => z[0]);
+    // 1. 按遗漏期数排序所有生肖
+    const sortedByMiss = CONFIG.ANALYSIS.ZODIAC_ALL.map(zod => ({ zod, miss: zodMiss[zod] || 0 }))
+      .sort((a, b) => a.miss - b.miss);
     
-    // 2. 冷号状态分析 (0-15分) - 降低权重
-    let maxMiss = 0;
-    Object.values(zodMiss).forEach(m => { if(m > maxMiss) maxMiss = m; });
+    // 2. 分类：热号(前3)、温号(第4-9)、冷号(第10-12)
+    const hot = sortedByMiss.slice(0, 3);
+    const warm = sortedByMiss.slice(3, 9);
+    const cold = sortedByMiss.slice(9, 12);
+    
+    const hotZodSet = new Set(hot.map(item => item.zod));
+    const warmZodSet = new Set(warm.map(item => item.zod));
+    const coldZodSet = new Set(cold.map(item => item.zod));
 
-    // 3. 间隔规律分析
+    // 3. 计算基础分数
+    const baseScores = {};
+    
+    // 热号固定35分
+    hot.forEach(item => {
+      baseScores[item.zod] = 35;
+    });
+    
+    // 温号20-28分线性映射
+    if(warm.length > 0) {
+      const warmOmissions = warm.map(item => item.miss);
+      const minW = Math.min(...warmOmissions);
+      const maxW = Math.max(...warmOmissions);
+      
+      if(maxW === minW) {
+        warm.forEach(item => {
+          baseScores[item.zod] = 24;
+        });
+      } else {
+        warm.forEach(item => {
+          const score = 28 - 8 * (item.miss - minW) / (maxW - minW);
+          baseScores[item.zod] = Math.round(score);
+        });
+      }
+    }
+    
+    // 冷号0-15分线性映射
+    if(cold.length > 0) {
+      const coldOmissions = cold.map(item => item.miss);
+      const minC = Math.min(...coldOmissions);
+      const maxC = Math.max(...coldOmissions);
+      
+      if(maxC === minC) {
+        cold.forEach(item => {
+          baseScores[item.zod] = 8;
+        });
+      } else {
+        cold.forEach(item => {
+          const score = 15 * (maxC - item.miss) / (maxC - minC);
+          baseScores[item.zod] = Math.round(score);
+        });
+      }
+    }
+
+    // 4. 间隔规律分析
     const zodiacOrder = ['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪'];
     const intervalStats = {};
     for(let i = 0; i < 12; i++) intervalStats[i] = 0;
@@ -4420,7 +4470,7 @@ const Business = {
     }
     const commonIntervals = Object.entries(intervalStats).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => parseInt(x[0]) - 6);
 
-    // 4. 上期生肖用于形态匹配
+    // 5. 上期生肖用于形态匹配
     const lastZod = list.length > 0 ? Business.getSpecial(list[0]).zod : '';
     
     // 五行相生关系
@@ -4439,28 +4489,18 @@ const Business = {
       '猴': '金', '鸡': '金', '狗': '土', '猪': '水'
     };
 
-    // 计算每个生肖的综合分数
+    // 计算每个生肖的综合分数（基础分 + 形态分 + 间隔分）
     CONFIG.ANALYSIS.ZODIAC_ALL.forEach(zod => {
-      let score = 0;
-      const details = { cold: 0, hot: 0, shape: 0, interval: 0 };
+      let score = baseScores[zod] || 0;
+      const details = { cold: 0, hot: 0, warm: 0, shape: 0, interval: 0 };
 
-      // 冷号状态 (0-15分) - 降低权重
-      const missValue = zodMiss[zod] || 0;
-      if(maxMiss > 0 && missValue >= maxMiss * 0.8) {
-        details.cold = 15;
-        score += 15;
-      } else if(missValue >= 24) {
-        details.cold = 10;
-        score += 10;
-      } else if(missValue >= 12) {
-        details.cold = 5;
-        score += 5;
-      }
-
-      // 热号状态 (0-35分) - 提高权重
-      if(hotZodiacs.includes(zod)) {
-        details.hot = 35;
-        score += 35;
+      // 分类标签
+      if(hotZodSet.has(zod)) {
+        details.hot = baseScores[zod];
+      } else if(warmZodSet.has(zod)) {
+        details.warm = baseScores[zod];
+      } else if(coldZodSet.has(zod)) {
+        details.cold = baseScores[zod];
       }
 
       // 形态匹配 (0-30分) - 五行相生
@@ -4530,6 +4570,7 @@ const Business = {
           const tags = [];
           if(details.cold > 0) tags.push(`冷${details.cold}`);
           if(details.hot > 0) tags.push(`热${details.hot}`);
+          if(details.warm > 0) tags.push(`温${details.warm}`);
           if(details.shape > 0) tags.push(`形${details.shape}`);
           if(details.interval > 0) tags.push(`间${details.interval}`);
 
