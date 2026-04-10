@@ -323,11 +323,10 @@
       </div>
     </div>
     <div class="card">
-      <div class="card-header" style="cursor:pointer;" onclick="Business.toggleSelectedZodiacHistoryCollapse()">
+      <div class="card-header">
         <h2>精选生肖</h2>
         <div style="display:flex;gap:4px;align-items:center;">
-          <span id="selectedZodiacHistoryToggleIcon" style="transition:transform 0.3s;">▼</span>
-          <button class="btn-mini red" data-action="clearSelectedZodiacHistory" style="font-size:11px;" onclick="event.stopPropagation();">清空</button>
+          <button class="btn-mini red" data-action="clearSelectedZodiacHistory" style="font-size:11px;">清空</button>
         </div>
       </div>
       <div class="card-body" id="selectedZodiacHistoryBody">
@@ -337,12 +336,11 @@
       </div>
     </div>
     <div class="card">
-      <div class="card-header" style="cursor:pointer;" onclick="Business.toggleZodiacPredictionHistoryCollapse()">
+      <div class="card-header">
         <h2>🔮 生肖预测历史</h2>
         <div style="display:flex;gap:4px;align-items:center;">
-          <span id="zodiacPredictionHistoryToggleIcon" style="transition:transform 0.3s;">▼</span>
-          <button class="btn-mini" data-action="togglePredictionFiltersPanel" style="font-size:11px;" onclick="event.stopPropagation();">选择</button>
-          <button class="btn-mini red" data-action="clearZodiacPredictionHistory" style="font-size:11px;" onclick="event.stopPropagation();">清空</button>
+          <button class="btn-mini" data-action="togglePredictionFiltersPanel" style="font-size:11px;">选择</button>
+          <button class="btn-mini red" data-action="clearZodiacPredictionHistory" style="font-size:11px;">清空</button>
         </div>
       </div>
       <div class="card-body" id="zodiacPredictionHistoryBody">
@@ -387,18 +385,17 @@
       </div>
     </div>
     <div class="card">
-      <div class="card-header" style="cursor:pointer;" onclick="Business.toggleSpecialHistoryCollapse()">
+      <div class="card-header">
         <h2>精选特码历史</h2>
         <div style="display:flex;gap:4px;align-items:center;">
-          <span id="specialHistoryToggleIcon" style="transition:transform 0.3s;">▼</span>
           <!-- 模式筛选按钮组 -->
-          <div class="mode-switch-btns" style="display:flex;gap:4px;margin-right:8px;" onclick="event.stopPropagation();">
+          <div class="mode-switch-btns" style="display:flex;gap:4px;margin-right:8px;">
             <button class="btn-mini mode-btn special-history-mode-btn active" data-mode="all" data-action="switchSpecialHistoryMode" title="全部">全</button>
             <button class="btn-mini mode-btn special-history-mode-btn" data-mode="hot" data-action="switchSpecialHistoryMode" title="🔥 热号模式">🔥</button>
             <button class="btn-mini mode-btn special-history-mode-btn" data-mode="cold" data-action="switchSpecialHistoryMode" title="❄️ 冷号反弹">❄️</button>
           </div>
-          <button class="btn-mini" data-action="toggleSpecialFiltersPanel" style="font-size:11px;" onclick="event.stopPropagation();">选择</button>
-          <button class="btn-mini red" data-action="clearSpecialHistory" aria-label="清空精选特码历史" style="font-size:11px;" onclick="event.stopPropagation();">清空</button>
+          <button class="btn-mini" data-action="toggleSpecialFiltersPanel" style="font-size:11px;">选择</button>
+          <button class="btn-mini red" data-action="clearSpecialHistory" aria-label="清空精选特码历史" style="font-size:11px;">清空</button>
         </div>
       </div>
       <div class="card-body" id="specialHistoryBody">
@@ -430,11 +427,10 @@
       </div>
     </div>
     <div class="card">
-      <div class="card-header" style="cursor:pointer;" onclick="Business.toggleHotNumbersHistoryCollapse()">
+      <div class="card-header">
         <h2>特码热门TOP5历史</h2>
         <div style="display:flex;gap:4px;align-items:center;">
-          <span id="hotNumbersHistoryToggleIcon" style="transition:transform 0.3s;">▼</span>
-          <button class="btn-mini red" data-action="clearHotNumbersHistory" style="font-size:11px;" onclick="event.stopPropagation();">清空</button>
+          <button class="btn-mini red" data-action="clearHotNumbersHistory" style="font-size:11px;">清空</button>
         </div>
       </div>
       <div class="card-body" id="hotNumbersHistoryBody">
@@ -1953,7 +1949,6 @@ const StateManager = {
     // 精选生肖历史状态
     selectedZodiacHistory: [],
     selectedZodiacHistoryExpanded: false,
-    selectedZodiacHistoryCollapsed: true, // 默认折叠
     selectedZodiacHistoryPage: 1,
     selectedZodiacHistoryPageSize: 50,
     // 特码热门top5历史状态
@@ -1963,12 +1958,7 @@ const StateManager = {
     hotNumbersHistoryPageSize: 50,
     // 预测历史状态
     zodiacPredictionHistoryExpanded: false,
-    zodiacPredictionHistoryCollapsed: true, // 默认折叠
     mlPredictionHistoryExpanded: false,
-    // 精选特码历史状态
-    specialHistoryCollapsed: true, // 默认折叠
-    // 特码热门TOP5历史状态
-    hotNumbersHistoryCollapsed: true // 默认折叠
   },
 
   /**
@@ -4555,29 +4545,32 @@ const Business = {
     if(zodiacEmptyTip) zodiacEmptyTip.style.display = 'none';
     if(zodiacContent) zodiacContent.style.display = 'block';
 
-    // 生肖预测
+    // 生肖预测 - 使用连续线性评分方案
     const zodiacPredictionGrid = document.getElementById('zodiacPredictionGrid');
     if(zodiacPredictionGrid) {
       if(data.sortedZodiacs && data.sortedZodiacs.length > 0) {
+        // 使用连续线性评分方案
+        const continuous = Business.calcContinuousScores(data);
+        const sortedZodiacs = Object.entries(continuous.scores).sort((a, b) => b[1] - a[1]);
+        
         let predictionHtml = '';
-        data.sortedZodiacs.forEach(([zod, score], idx) => {
-          const details = data.zodiacDetails[zod];
+        sortedZodiacs.forEach(([zod, totalScore], idx) => {
+          const det = continuous.details[zod];
           let topClass = '';
           if(idx === 0) topClass = 'top-1';
           else if(idx === 1) topClass = 'top-2';
           else if(idx === 2) topClass = 'top-3';
 
+          // 生成标签（显示基础分、形态分、间隔分）
           const tags = [];
-          if(details.cold > 0) tags.push(`冷${details.cold}`);
-          if(details.hot > 0) tags.push(`热${details.hot}`);
-          if(details.warm > 0) tags.push(`温${details.warm}`);
-          if(details.shape > 0) tags.push(`形${details.shape}`);
-          if(details.interval > 0) tags.push(`间${details.interval}`);
+          if(det.base > 0) tags.push(`${det.status}${det.base}`);
+          if(det.shape > 0) tags.push(`形${det.shape}`);
+          if(det.interval > 0) tags.push(`间${det.interval}`);
 
           predictionHtml += `
             <div class="zodiac-prediction-item ${topClass}" data-zodiac="${zod}">
               <div class="zodiac-prediction-zodiac">${zod}</div>
-              <div class="zodiac-prediction-score">${score}分</div>
+              <div class="zodiac-prediction-score">${totalScore}分</div>
               <div class="zodiac-prediction-details">
                 ${tags.map(t => `<span class="zodiac-prediction-tag">${t}</span>`).join('')}
               </div>
@@ -4586,8 +4579,19 @@ const Business = {
         });
         zodiacPredictionGrid.innerHTML = predictionHtml;
         
-        // 保存预测历史
-        Business.saveZodiacPredictionHistory(data.sortedZodiacs, data.zodiacDetails);
+        // 保存预测历史 - 转换为与原函数兼容的格式
+        const compatibleSortedZodiacs = Object.entries(continuous.scores).sort((a, b) => b[1] - a[1]);
+        const compatibleZodiacDetails = {};
+        Object.entries(continuous.details).forEach(([zod, det]) => {
+          compatibleZodiacDetails[zod] = {
+            cold: det.status === '冷' ? det.base : 0,
+            hot: det.status === '热' ? det.base : 0,
+            warm: det.status === '温' ? det.base : 0,
+            shape: det.shape,
+            interval: det.interval
+          };
+        });
+        Business.saveZodiacPredictionHistory(compatibleSortedZodiacs, compatibleZodiacDetails);
         // 渲染预测历史
         Business.renderZodiacPredictionHistory();
       } else {
@@ -5651,115 +5655,263 @@ const Business = {
    * @param {string} zodiac - 生肖名称
    */
   showZodiacDetail: (zodiac) => {
-    const data = Business.calcZodiacAnalysis();
+    // 显示加载状态
+    const loadingModal = Business.createLoadingModal('正在分析数据...');
+    document.body.appendChild(loadingModal);
 
-    // 创建弹窗
+    // 异步处理数据计算，避免阻塞UI
+    setTimeout(() => {
+      try {
+        // 预计算数据，减少重复计算
+        const data = Business.calcZodiacAnalysis();
+        const continuous = data ? Business.calcContinuousScores(data) : null;
+        const zodiacNumbers = Business.getZodiacNumbers(zodiac);
+
+        // 移除加载状态
+        loadingModal.style.opacity = '0';
+        setTimeout(() => loadingModal.remove(), 300);
+
+        // 创建弹窗容器
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.style.opacity = '0';
+        modal.style.transition = 'opacity 0.3s ease, backdrop-filter 0.3s ease';
+        modal.style.zIndex = '1000';
+        
+        // 生成关联号码HTML（提前计算）
+        const numbersHtml = zodiacNumbers.map(num => {
+          const attrs = DataQuery.getNumAttrs(num);
+          const color = attrs.color;
+          const colorClass = color === '红' ? 'red' : color === '蓝' ? 'blue' : 'green';
+          return `
+            <div class="number-item">
+              <div class="ball ${colorClass}">${String(num).padStart(2, '0')}</div>
+              <div class="number-label">${attrs.zodiac}/${attrs.element}</div>
+            </div>
+          `;
+        }).join('');
+        
+        // 生成评分详情HTML
+        let scoreHtml = '';
+        if (continuous && continuous.details && continuous.details[zodiac]) {
+          const det = continuous.details[zodiac];
+          scoreHtml = `
+            <div class="score-section">
+              <h4 class="section-title">评分详情</h4>
+              <div class="score-card">
+                <div class="score-grid">
+                  <div class="score-item">
+                    <div class="score-header">
+                      <span class="score-label">基础分</span>
+                      <span class="score-value">${det.status}${det.base}分</span>
+                    </div>
+                    <div class="score-bar">
+                      <div class="score-bar-fill" style="width:${(det.base / 35) * 100}%; background: linear-gradient(90deg, #6366f1, #8b5cf6);"></div>
+                    </div>
+                  </div>
+                  <div class="score-item">
+                    <div class="score-header">
+                      <span class="score-label">遗漏排名</span>
+                      <span class="score-value">第${det.rank}名</span>
+                    </div>
+                    <div class="score-bar">
+                      <div class="score-bar-fill" style="width:${((12 - det.rank + 1) / 12) * 100}%; background: linear-gradient(90deg, #10b981, #34d399);"></div>
+                    </div>
+                  </div>
+                  <div class="score-item">
+                    <div class="score-header">
+                      <span class="score-label">形态匹配</span>
+                      <span class="score-value">${det.shape}分</span>
+                    </div>
+                    <div class="score-bar">
+                      <div class="score-bar-fill" style="width:${(det.shape / 15) * 100}%; background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
+                    </div>
+                  </div>
+                  <div class="score-item">
+                    <div class="score-header">
+                      <span class="score-label">间隔匹配</span>
+                      <span class="score-value">${det.interval}分</span>
+                    </div>
+                    <div class="score-bar">
+                      <div class="score-bar-fill" style="width:${(det.interval / 20) * 100}%; background: linear-gradient(90deg, #ef4444, #f87171);"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="total-score">
+                  <div class="total-score-header">
+                    <span class="total-score-label">综合评分</span>
+                    <span class="total-score-value">${det.total}分</span>
+                  </div>
+                  <div class="total-score-bar">
+                    <div class="total-score-fill" style="width:${(det.total / 70) * 100}%; background: linear-gradient(90deg, #6366f1, #ec4899);"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        
+        // 生成提示信息
+        const noticeHtml = !data ? `
+          <div class="notice-box">
+            <strong>提示：</strong>历史数据未加载，显示的是默认信息。请切换到分析页面加载历史数据后查看详细分析。
+          </div>
+        ` : '';
+        
+        // 生成完整HTML
+        let detailHtml = `
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3 class="modal-title">${zodiac} - 详细分析</h3>
+              <button class="modal-close-btn" onclick="Business.closeModal(this)">×</button>
+            </div>
+            
+            <div class="modal-body">
+              <div class="numbers-section">
+                <h4 class="section-title">关联号码</h4>
+                <div class="numbers-grid">
+                  ${numbersHtml}
+                </div>
+              </div>
+              
+              ${scoreHtml}
+              
+              <div class="action-section">
+                <button class="btn-primary" onclick="Business.copyZodiacNumbersByZodiac('${zodiac.replace(/'/g, "\\'")}'); Business.showCopySuccess(this)">复制号码</button>
+              </div>
+              
+              ${noticeHtml}
+            </div>
+          </div>
+        `;
+        
+        modal.innerHTML = detailHtml;
+        
+        // 点击遮罩层关闭
+        modal.addEventListener('click', (e) => {
+          if(e.target === modal) {
+            Business.closeModal(modal);
+          }
+        });
+        
+        document.body.appendChild(modal);
+        
+        // 触发动画
+        setTimeout(() => {
+          modal.style.opacity = '1';
+        }, 10);
+      } catch (error) {
+        // 错误处理
+        console.error('打开生肖详情失败:', error);
+        loadingModal.style.opacity = '0';
+        setTimeout(() => loadingModal.remove(), 300);
+        Toast.show('加载失败，请稍后重试');
+      }
+    }, 100);
+  },
+
+  /**
+   * 创建加载弹窗
+   * @param {string} message - 加载提示信息
+   * @returns {HTMLElement} 加载弹窗元素
+   */
+  createLoadingModal: (message = '加载中...') => {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.style.opacity = '0';
     modal.style.transition = 'opacity 0.3s ease';
-    
-    // 生成详情HTML
-    let detailHtml = `
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3 class="modal-title">${zodiac}</h3>
-          <button class="modal-close-btn" onclick="const modal = this.closest('.modal-overlay'); modal.style.opacity = '0'; setTimeout(() => modal.remove(), 300);">×</button>
-        </div>
-        
-        <div style="font-size:14px;color:var(--text);margin-bottom:12px;font-weight:500;">关联号码</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
-          ${Business.getZodiacNumbers(zodiac).map(num => {
-            const attrs = DataQuery.getNumAttrs(num);
-            const color = attrs.color;
-            const colorClass = color === '红' ? 'red' : color === '蓝' ? 'blue' : 'green';
-            return `
-              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-                <div class="ball ${colorClass}">${String(num).padStart(2, '0')}</div>
-                <div style="font-size:11px;color:var(--sub-text);text-align:center;font-weight:500;">${attrs.zodiac}/${attrs.element}</div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-        
-        ${data && data.zodiacDetails && data.zodiacDetails[zodiac] ? `
-        <div style="margin-top:20px;">
-          <div style="font-size:14px;color:var(--text);margin-bottom:12px;font-weight:500;">评分详情</div>
-          <div style="background:var(--bg-secondary);border-radius:12px;padding:16px;">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-              <div style="display:flex;flex-direction:column;gap:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                  <span style="font-size:13px;color:var(--text);">冷号状态</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--primary);">${data.zodiacDetails[zodiac].cold}分</span>
-                </div>
-                <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
-                  <div style="height:100%;width:${(data.zodiacDetails[zodiac].cold / 30) * 100}%;background:linear-gradient(90deg, #6366f1, #8b5cf6);border-radius:3px;"></div>
-                </div>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                  <span style="font-size:13px;color:var(--text);">热号状态</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--primary);">${data.zodiacDetails[zodiac].hot}分</span>
-                </div>
-                <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
-                  <div style="height:100%;width:${(data.zodiacDetails[zodiac].hot / 20) * 100}%;background:linear-gradient(90deg, #10b981, #34d399);border-radius:3px;"></div>
-                </div>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                  <span style="font-size:13px;color:var(--text);">形态匹配</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--primary);">${data.zodiacDetails[zodiac].shape}分</span>
-                </div>
-                <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
-                  <div style="height:100%;width:${(data.zodiacDetails[zodiac].shape / 30) * 100}%;background:linear-gradient(90deg, #f59e0b, #fbbf24);border-radius:3px;"></div>
-                </div>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                  <span style="font-size:13px;color:var(--text);">间隔匹配</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--primary);">${data.zodiacDetails[zodiac].interval}分</span>
-                </div>
-                <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
-                  <div style="height:100%;width:${(data.zodiacDetails[zodiac].interval / 20) * 100}%;background:linear-gradient(90deg, #ef4444, #f87171);border-radius:3px;"></div>
-                </div>
-              </div>
-            </div>
-            <div style="margin-top:16px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                <span style="font-size:14px;font-weight:600;color:var(--text);">综合评分</span>
-                <span style="font-size:16px;font-weight:700;color:var(--primary);">${data.zodiacScores[zodiac]}分</span>
-              </div>
-              <div style="height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden;">
-                <div style="height:100%;width:${(data.zodiacScores[zodiac] / 100) * 100}%;background:linear-gradient(90deg, #6366f1, #ec4899);border-radius:4px;"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        ` : ''}
-        
-        <div style="margin-top:20px;display:flex;justify-content:center;">
-          <button class="btn-line" onclick="Business.copyZodiacNumbersByZodiac('${zodiac.replace(/'/g, "\\'")}')">复制号码</button>
-        </div>
-        
-        ${!data ? '<div style="margin-top:16px; padding:16px; background:var(--bg-secondary); border-radius:12px; color:var(--text);"><strong>提示：</strong>历史数据未加载，显示的是默认信息。请切换到分析页面加载历史数据后查看详细分析。</div>' : ''}
+    modal.style.zIndex = '1001';
+    modal.innerHTML = `
+      <div class="modal-content loading-modal">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">${message}</div>
       </div>
     `;
-    
-    modal.innerHTML = detailHtml;
-    
-    modal.addEventListener('click', (e) => {
-      if(e.target === modal) {
-        modal.style.opacity = '0';
-        setTimeout(() => modal.remove(), 300);
-      }
-    });
-    
-    document.body.appendChild(modal);
-    
-    // 触发动画
     setTimeout(() => {
       modal.style.opacity = '1';
     }, 10);
+    return modal;
+  },
+
+  /**
+   * 关闭弹窗
+   * @param {HTMLElement} element - 弹窗元素或关闭按钮
+   */
+  closeModal: (element) => {
+    const modal = element.closest('.modal-overlay') || element;
+    if (modal) {
+      modal.style.opacity = '0';
+      setTimeout(() => {
+        if (modal.parentNode) {
+          modal.parentNode.removeChild(modal);
+        }
+      }, 300);
+    }
+  },
+
+  /**
+   * 批量更新DOM，减少重排
+   * @param {Function} callback - 回调函数，包含DOM操作
+   */
+  batchUpdateDOM: (callback) => {
+    try {
+      // 使用requestAnimationFrame优化DOM更新
+      requestAnimationFrame(() => {
+        // 创建文档片段减少重排
+        const fragment = document.createDocumentFragment();
+        callback(fragment);
+      });
+    } catch (e) {
+      console.error('批量更新DOM失败', e);
+    }
+  },
+
+  /**
+   * 节流函数，优化频繁触发的事件
+   * @param {Function} func - 要执行的函数
+   * @param {number} delay - 延迟时间（毫秒）
+   * @returns {Function} 节流后的函数
+   */
+  throttle: (func, delay) => {
+    let timer = null;
+    return function(...args) {
+      if (!timer) {
+        timer = setTimeout(() => {
+          func.apply(this, args);
+          timer = null;
+        }, delay);
+      }
+    };
+  },
+
+  /**
+   * 防抖函数，优化频繁触发的事件
+   * @param {Function} func - 要执行的函数
+   * @param {number} delay - 延迟时间（毫秒）
+   * @returns {Function} 防抖后的函数
+   */
+  debounce: (func, delay) => {
+    let timer = null;
+    return function(...args) {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        func.apply(this, args);
+      }, delay);
+    };
+  },
+
+  /**
+   * 显示复制成功提示
+   * @param {HTMLElement} button - 触发按钮
+   */
+  showCopySuccess: (button) => {
+    const originalText = button.textContent;
+    button.textContent = '复制成功！';
+    button.style.background = 'var(--success)';
+    setTimeout(() => {
+      button.textContent = originalText;
+      button.style.background = '';
+    }, 2000);
   },
 
   /**
@@ -6527,13 +6679,7 @@ const Business = {
       const show30Period = document.querySelector('.prediction-period-btn[data-period="30"]')?.classList.contains('active') ?? false;
       const showAllPeriod = document.querySelector('.prediction-period-btn[data-period="all"]')?.classList.contains('active') ?? false;
       
-      // 获取折叠状态
-      const isCollapsed = state.zodiacPredictionHistoryCollapsed || true;
-      
-      // 更新折叠图标
-      if(toggleIconEl) {
-        toggleIconEl.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
-      }
+
       
       // 创建期数到生肖的映射
       const expectToZodiac = {};
@@ -6558,9 +6704,8 @@ const Business = {
         return false;
       });
       
-      // 确定要显示的记录数量 - 折叠时只显示2条
-      const maxDisplay = isCollapsed ? 2 : filteredHistory.length;
-      const displayHistory = filteredHistory.slice(0, maxDisplay);
+      // 显示所有历史记录
+      const displayHistory = filteredHistory;
       
       if(filteredHistory.length === 0) {
         historyListEl.innerHTML = '<div style="text-align:center;color:var(--sub-text);padding:20px;font-size:13px;">暂无预测历史</div>';
@@ -6622,10 +6767,7 @@ const Business = {
         `;
       });
       
-      // 如果折叠且还有更多数据，显示提示
-      if(isCollapsed && filteredHistory.length > 2) {
-        html += `<div style="text-align:center;color:var(--sub-text);padding:10px;font-size:12px;">还有 ${filteredHistory.length - 2} 条记录，点击展开</div>`;
-      }
+
       
       historyListEl.innerHTML = html;
       
@@ -6638,47 +6780,7 @@ const Business = {
     }
   },
   
-  /**
-   * 切换生肖预测历史折叠状态
-   */
-  toggleZodiacPredictionHistoryCollapse: () => {
-    try {
-      const state = StateManager._state;
-      const currentCollapsed = state.zodiacPredictionHistoryCollapsed;
-      StateManager.setState({ zodiacPredictionHistoryCollapsed: !currentCollapsed }, false);
-      Business.renderZodiacPredictionHistory();
-    } catch(e) {
-      console.error('切换生肖预测历史折叠状态失败', e);
-    }
-  },
 
-  /**
-   * 切换精选特码历史折叠状态
-   */
-  toggleSpecialHistoryCollapse: () => {
-    try {
-      const state = StateManager._state;
-      const currentCollapsed = state.specialHistoryCollapsed;
-      StateManager.setState({ specialHistoryCollapsed: !currentCollapsed }, false);
-      Business.renderSpecialHistory();
-    } catch(e) {
-      console.error('切换精选特码历史折叠状态失败', e);
-    }
-  },
-
-  /**
-   * 切换特码热门TOP5历史折叠状态
-   */
-  toggleHotNumbersHistoryCollapse: () => {
-    try {
-      const state = StateManager._state;
-      const currentCollapsed = state.hotNumbersHistoryCollapsed;
-      StateManager.setState({ hotNumbersHistoryCollapsed: !currentCollapsed }, false);
-      Business.renderHotNumbersHistory();
-    } catch(e) {
-      console.error('切换特码热门TOP5历史折叠状态失败', e);
-    }
-  },
 
   /**
    * 切换预测历史的展开/折叠状态
@@ -7347,7 +7449,7 @@ const Business = {
           const borderColor = isMatch ? '#4CAF50' : 'var(--border)';
           
           predictionsHtml += `
-            <div style="padding:10px;background:${bgColor};border:1px solid ${borderColor};border-radius:8px;margin-bottom:8px;">
+            <div style="padding:10px;background:${bgColor};border:1px solid ${borderColor};border-radius:8px;margin-bottom:8px;animation: slideInUp 0.3s ease forwards; animation-delay: ${i * 0.1}s; opacity: 0; transform: translateY(10px);">
               <div style="display:flex;justify-content:space-between;align-items:center;">
                 <span style="font-weight:600;">${i + 1}. ${zodiacName}</span>
                 ${p.score ? `<span style="color:var(--sub-text);font-size:12px;">${p.score}分</span>` : ''}
@@ -7361,12 +7463,14 @@ const Business = {
       
       const modal = document.createElement('div');
       modal.className = 'modal-overlay';
+      modal.style.opacity = '0';
+      modal.style.transition = 'opacity 0.3s ease, backdrop-filter 0.3s ease';
       
       modal.innerHTML = `
         <div class="modal-content">
           <div class="modal-header">
             <h3 class="modal-title">预测详情</h3>
-            <button class="modal-close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+            <button class="modal-close-btn" onclick="Business.closeModal(this)">×</button>
           </div>
           
           <div class="modal-info">
@@ -7391,7 +7495,7 @@ const Business = {
             ` : ''}
           </div>
           
-          <div style="font-size:14px;color:var(--text);margin-bottom:12px;font-weight:500;">预测结果</div>
+          <div class="modal-detail-section-title">预测结果</div>
           <div style="max-height:300px;overflow-y:auto;">
             ${predictionsHtml || '<div style="text-align:center;color:var(--sub-text);padding:20px;">暂无预测数据</div>'}
           </div>
@@ -7399,12 +7503,20 @@ const Business = {
       `;
       
       modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.remove();
+        if (e.target === modal) {
+          Business.closeModal(modal);
+        }
       });
       
       document.body.appendChild(modal);
+      
+      // 触发动画
+      setTimeout(() => {
+        modal.style.opacity = '1';
+      }, 10);
     } catch (e) {
       console.error('显示预测历史详情失败', e);
+      Toast.show('加载失败，请稍后重试');
     }
   },
 
@@ -7733,10 +7845,7 @@ const Business = {
         finalActiveValues = [activeValues[0]];
       }
     }
-    // 预测历史期数按钮允许多选
-    if (selector === '.prediction-period-btn') {
-      finalActiveValues = activeValues;
-    }
+
     
     buttons.forEach(btn => {
       const value = btn.getAttribute(dataAttr);
@@ -7799,10 +7908,10 @@ const Business = {
   },
 
   /**
-   * 全选预测历史的期数
+   * 选择所有期数（已改为单选模式，此函数保留但只选择10期）
    */
   selectAllPredictionPeriods: () => {
-    Business.setButtonGroupState('.prediction-period-btn', ['10', '20', '30', 'all'], 'data-period');
+    Business.setButtonGroupState('.prediction-period-btn', ['10'], 'data-period');
     Business.savePredictionHistoryFilter();
     Business.renderZodiacPredictionHistory();
     Business.togglePanel('predictionFiltersPanel');
@@ -8527,12 +8636,6 @@ const Business = {
       if(!historyListEl) return;
       
       const history = state.specialHistory;
-      const isCollapsed = state.specialHistoryCollapsed || true;
-      
-      // 更新折叠图标
-      if(toggleIconEl) {
-        toggleIconEl.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
-      }
       
       if(!history || history.length === 0) {
         historyListEl.innerHTML = '<div style="text-align:center;color:var(--sub-text);padding:20px;font-size:13px;">暂无精选特码历史</div>';
@@ -8561,9 +8664,8 @@ const Business = {
       // 使用辅助函数获取筛选后的历史记录
       const filteredHistory = Business.getFilteredSpecialHistory();
       
-      // 确定要显示的记录数量 - 折叠时只显示2条
-      const maxDisplay = isCollapsed ? 2 : filteredHistory.length;
-      const displayHistory = filteredHistory.slice(0, maxDisplay);
+      // 显示所有历史记录
+      const displayHistory = filteredHistory;
       
       let html = '';
       displayHistory.forEach((item, globalIdx) => {
@@ -8638,10 +8740,7 @@ const Business = {
         `;
       });
       
-      // 如果折叠且还有更多数据，显示提示
-      if(isCollapsed && filteredHistory.length > 2) {
-        html += `<div style="text-align:center;color:var(--sub-text);padding:10px;font-size:12px;">还有 ${filteredHistory.length - 2} 条记录，点击展开</div>`;
-      }
+
       
       historyListEl.innerHTML = html;
     } catch(e) {
@@ -8811,7 +8910,7 @@ const Business = {
       
       // 生成号码详细信息
       let numbersDetailHtml = '';
-      item.numbers.forEach(num => {
+      item.numbers.forEach((num, index) => {
         const attrs = DataQuery.getNumAttrs(num);
         const color = attrs.color;
         const colorClass = color === '红' ? 'red' : color === '蓝' ? 'blue' : 'green';
@@ -8821,7 +8920,7 @@ const Business = {
         if(isHit) {
           // 命中的球号显示卡片样式
           numbersDetailHtml += `
-            <div class="modal-detail-card hit">
+            <div class="modal-detail-card hit" style="animation: slideInUp 0.3s ease forwards; animation-delay: ${index * 0.1}s; opacity: 0; transform: translateY(10px);">
               <div class="ball ${colorClass}">${String(num).padStart(2, '0')}${hitMark}</div>
               <div class="modal-detail-ball-info">${attrs.zodiac}/${attrs.element}</div>
             </div>
@@ -8829,7 +8928,7 @@ const Business = {
         } else {
           // 普通球号直接显示
           numbersDetailHtml += `
-            <div class="modal-detail-ball-container">
+            <div class="modal-detail-ball-container" style="animation: slideInUp 0.3s ease forwards; animation-delay: ${index * 0.1}s; opacity: 0; transform: translateY(10px);">
               <div class="ball ${colorClass}">${String(num).padStart(2, '0')}</div>
               <div class="modal-detail-ball-info">${attrs.zodiac}/${attrs.element}</div>
             </div>
@@ -8848,7 +8947,7 @@ const Business = {
         drawResultHtml = `
           <div class="modal-detail-section">
             <div class="modal-detail-section-title">开奖号码</div>
-            <div class="modal-detail-result-card">
+            <div class="modal-detail-result-card" style="animation: slideInUp 0.3s ease forwards; animation-delay: ${item.numbers.length * 0.1 + 0.2}s; opacity: 0; transform: translateY(10px);">
               <div class="modal-detail-result-main">
                 <div class="ball ${colorClass} modal-detail-result-ball">${String(item.drawResult).padStart(2, '0')}</div>
                 <div class="modal-detail-result-info">${attrs.zodiac}/${attrs.element}</div>
@@ -8872,12 +8971,14 @@ const Business = {
       // 创建弹窗
       const modal = document.createElement('div');
       modal.className = 'modal-overlay';
+      modal.style.opacity = '0';
+      modal.style.transition = 'opacity 0.3s ease, backdrop-filter 0.3s ease';
       
       modal.innerHTML = `
         <div class="modal-content">
           <div class="modal-header">
             <h3 class="modal-title">精选特码详情</h3>
-            <button class="modal-close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+            <button class="modal-close-btn" onclick="Business.closeModal(this)">×</button>
           </div>
           
           <div class="modal-info">
@@ -8898,19 +8999,27 @@ const Business = {
           
           ${drawResultHtml}
           
-          <div style="margin-top:1.25rem;">
-            <button class="btn-line" onclick="Business.copySpecialHistory(${filteredIdx}, '${numbersText.replace(/'/g, "\\'")}', event)">复制号码</button>
+          <div class="action-section">
+            <button class="btn-primary" onclick="Business.copySpecialHistory(${filteredIdx}, '${numbersText.replace(/'/g, "\\'")}', event); Business.showCopySuccess(this)">复制号码</button>
           </div>
         </div>
       `;
+      
       modal.addEventListener('click', (e) => {
-        if(e.target === modal) modal.remove();
+        if(e.target === modal) {
+          Business.closeModal(modal);
+        }
       });
       
       document.body.appendChild(modal);
+      
+      // 触发动画
+      setTimeout(() => {
+        modal.style.opacity = '1';
+      }, 10);
     } catch(e) {
       console.error('显示精选特码历史详情失败', e);
-      Toast.show('显示详情失败');
+      Toast.show('加载失败，请稍后重试');
     }
   },
 
@@ -9061,6 +9170,198 @@ const Business = {
    */
   checkUpdate: () => {
     Toast.show('当前已是最新版本');
+  },
+
+  /**
+   * 连续线性评分方案（排名1→35分，排名12→0分）
+   * @param {Object} data - calcZodiacAnalysis 返回的数据对象
+   * @returns {Object} { scores: {生肖: 总分}, details: {生肖: {base, shape, interval, total, rank, status}} }
+   */
+  calcContinuousScores: (data) => {
+    if (!data || !data.list || data.list.length === 0) {
+      return { scores: {}, details: {} };
+    }
+
+    const zodiacOrder = ['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪'];
+    const list = data.list;
+    const lastZodiac = list.length > 0 ? Business.getSpecial(list[0]).zod : '';
+
+    // ---------- 1. 计算每个生肖的遗漏期数（越小越热）----------
+    const zodiacMiss = {};
+    zodiacOrder.forEach(z => { zodiacMiss[z] = list.length; });
+    list.forEach((item, idx) => {
+      const s = Business.getSpecial(item);
+      if (zodiacMiss[s.zod] === list.length) {
+        zodiacMiss[s.zod] = idx;
+      }
+    });
+
+    // ---------- 2. 按遗漏期数排序（升序）----------
+    const sortedByMiss = zodiacOrder.slice().sort((a, b) => zodiacMiss[a] - zodiacMiss[b]);
+    const total = zodiacOrder.length; // 12
+
+    // ---------- 3. 线性映射基础分：第1名35分，第12名0分 ----------
+    const baseScores = {};
+    sortedByMiss.forEach((zod, idx) => {
+      // 排名 idx 从0开始，第1名 idx=0 → 得分35，第12名 idx=11 → 得分0
+      const score = 35 * (total - 1 - idx) / (total - 1);
+      baseScores[zod] = Math.round(score); // 四舍五入取整
+    });
+
+    // ---------- 4. 融合形态分（总分15分，权重分配：热门形态共振9，尾数关联1，连出/遗漏2，五行相生2）----------
+    // 4.1 获取上期生肖及特码信息
+    const lastItem = list[0];
+    const lastSpecial = lastItem ? Business.getSpecial(lastItem) : null;
+    const lastTail = lastSpecial ? lastSpecial.tail : -1;
+    
+    // 4.2 计算最近10期的热门单双和大小
+    const recent10 = list.slice(0, Math.min(10, list.length));
+    let oddCount = 0, evenCount = 0, bigCount = 0, smallCount = 0;
+    recent10.forEach(item => {
+        const s = Business.getSpecial(item);
+        if (s.odd) oddCount++; else evenCount++;
+        if (s.big) bigCount++; else smallCount++;
+    });
+    const hotOddEven = oddCount > evenCount ? '单' : '双';
+    const hotBigSmall = bigCount > smallCount ? '大' : '小';
+    
+    // 4.3 计算每个生肖对应的特码单双和大小（取该生肖所有号码的多数属性）
+    const zodiacOddEven = {};
+    const zodiacBigSmall = {};
+    zodiacOrder.forEach(z => {
+        const nums = Business.getZodiacNumbers(z);
+        let oddCnt = 0, bigCnt = 0;
+        nums.forEach(num => {
+            if (num % 2 === 1) oddCnt++;
+            if (num >= 25) bigCnt++;
+        });
+        zodiacOddEven[z] = oddCnt > nums.length/2 ? '单' : '双';
+        zodiacBigSmall[z] = bigCnt > nums.length/2 ? '大' : '小';
+    });
+    
+    // 4.4 上期尾数→生肖映射（常见规则）
+    const tailToZodiacMap = {
+        0: ['鼠','猪'], 1: ['牛','狗'], 2: ['虎','鸡'], 3: ['兔','猴'],
+        4: ['龙','羊'], 5: ['蛇','马'], 6: ['马','蛇'], 7: ['羊','龙'],
+        8: ['猴','兔'], 9: ['鸡','虎']
+    };
+    
+    // 4.5 连出状态：最近5期内该生肖出现次数≥2视为连出；遗漏反弹：遗漏≥15期
+    const recent5 = list.slice(0, 5);
+    const recent5Count = {};
+    zodiacOrder.forEach(z => { recent5Count[z] = 0; });
+    recent5.forEach(item => {
+        const s = Business.getSpecial(item);
+        recent5Count[s.zod]++;
+    });
+    
+    // 4.6 五行相生（原有逻辑）
+    const elementGenerate = {
+        '金': ['水'], '水': ['木'], '木': ['火'], '火': ['土'], '土': ['金']
+    };
+    const zodiacElement = {
+        '鼠': '水', '牛': '土', '虎': '木', '兔': '木', '龙': '土', '蛇': '火',
+        '马': '火', '羊': '土', '猴': '金', '鸡': '金', '狗': '土', '猪': '水'
+    };
+    
+    // 4.7 综合计算每个生肖的形态分（总分15）
+    const shapeScores = {};
+    zodiacOrder.forEach(z => {
+        let score = 0;
+        
+        // 维度1：热门形态共振（5分）
+        if (zodiacOddEven[z] === hotOddEven && zodiacBigSmall[z] === hotBigSmall) {
+            score += 5;
+        }
+        
+        // 维度2：上期尾数关联（3分）
+        if (lastTail !== -1 && tailToZodiacMap[lastTail] && tailToZodiacMap[lastTail].includes(z)) {
+            score += 3;
+        }
+        
+        // 维度3：连出/遗漏形态（4分）
+        const miss = zodiacMiss[z];
+        const isStreak = recent5Count[z] >= 2;
+        const isHighMiss = miss >= 15;
+        if (isStreak || isHighMiss) {
+            score += 4;
+        }
+        
+        // 维度4：五行相生（3分）
+        if (lastZodiac && zodiacElement[lastZodiac] && zodiacElement[z]) {
+            const lastEl = zodiacElement[lastZodiac];
+            const curEl = zodiacElement[z];
+            if (elementGenerate[lastEl] && elementGenerate[lastEl].includes(curEl)) {
+                score += 3;
+            }
+        }
+        
+        // 限制总分不超过15（实际不会超过，但安全）
+        shapeScores[z] = Math.min(score, 15);
+    });
+
+    // ---------- 5. 间隔分（间隔规律，20分）----------
+    // 计算最近30期内出现最多的间隔偏移量（-5 到 +5）
+    const intervalStats = {};
+    for (let i = 0; i < 12; i++) intervalStats[i] = 0;
+    const recentList = list.slice(0, Math.min(30, list.length));
+    for (let i = 1; i < recentList.length; i++) {
+      const preZod = Business.getSpecial(recentList[i-1]).zod;
+      const curZod = Business.getSpecial(recentList[i]).zod;
+      const preIdx = zodiacOrder.indexOf(preZod);
+      const curIdx = zodiacOrder.indexOf(curZod);
+      if (preIdx !== -1 && curIdx !== -1) {
+        let diff = curIdx - preIdx;
+        if (diff > 6) diff -= 12;
+        if (diff < -6) diff += 12;
+        intervalStats[diff + 6]++;
+      }
+    }
+    const commonIntervals = Object.entries(intervalStats)
+      .sort((a,b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(x => parseInt(x[0]) - 6);
+    const intervalScores = {};
+    if (lastZodiac) {
+      const lastIdx = zodiacOrder.indexOf(lastZodiac);
+      zodiacOrder.forEach(z => {
+        const curIdx = zodiacOrder.indexOf(z);
+        let diff = curIdx - lastIdx;
+        if (diff > 6) diff -= 12;
+        if (diff < -6) diff += 12;
+        intervalScores[z] = commonIntervals.includes(diff) ? 20 : 0;
+      });
+    } else {
+      zodiacOrder.forEach(z => { intervalScores[z] = 0; });
+    }
+
+    // ---------- 6. 合并总分及详情 ----------
+    const scores = {};
+    const details = {};
+    zodiacOrder.forEach(z => {
+      const base = baseScores[z];
+      const shape = shapeScores[z];
+      const interval = intervalScores[z];
+      const totalScore = base + shape + interval;
+      scores[z] = totalScore;
+
+      // 根据基础分给出辅助状态文字（仅用于显示，不影响分数）
+      let status = '';
+      if (base >= 26) status = '热';
+      else if (base >= 10) status = '温';
+      else status = '冷';
+
+      details[z] = {
+        base: base,
+        shape: shape,
+        interval: interval,
+        total: totalScore,
+        rank: sortedByMiss.indexOf(z) + 1,
+        status: status
+      };
+    });
+
+    return { scores, details };
   },
 
   // ====================== 精选生肖历史相关 ======================
@@ -9295,136 +9596,157 @@ const Business = {
    * @param {string} zodiac - 生肖名称
    */
   showSelectedZodiacRatingDetail: (zodiac) => {
-    try {
-      const periods = [10, 20, 30];
-      const periodLabels = { 10: '10期', 20: '20期', 30: '30期' };
-      
-      let periodsHtml = '';
-      
-      periods.forEach(period => {
-        const data = Business.calcZodiacAnalysis(period);
-        if (!data) return;
+    // 显示加载状态
+    const loadingModal = Business.createLoadingModal('正在分析数据...');
+    document.body.appendChild(loadingModal);
+
+    // 异步处理数据计算，避免阻塞UI
+    setTimeout(() => {
+      try {
+        const periods = [10, 20, 30];
+        const periodLabels = { 10: '10期', 20: '20期', 30: '30期' };
         
-        const score = data.zodiacScores ? data.zodiacScores[zodiac] : 0;
-        const details = data.zodiacDetails ? data.zodiacDetails[zodiac] : { cold: 0, hot: 0, shape: 0, interval: 0 };
-        const count = data.zodCount ? data.zodCount[zodiac] : 0;
-        const miss = data.zodMiss ? data.zodMiss[zodiac] : 0;
-        const avgMiss = data.zodAvgMiss ? data.zodAvgMiss[zodiac] : 0;
+        let periodsHtml = '';
         
-        // 查找排名
-        let rank = '-';
-        if (data.sortedZodiacs) {
-          const idx = data.sortedZodiacs.findIndex(([z]) => z === zodiac);
-          if (idx !== -1) rank = `第${idx + 1}名`;
-        }
-        
-        periodsHtml += `
-          <div style="margin-bottom:16px;">
-            <div style="font-size:14px;font-weight:600;margin-bottom:10px;color:var(--text);">${periodLabels[period]}分析</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-              <div style="display:flex;flex-direction:column;gap:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                  <span style="font-size:13px;color:var(--text);">冷号状态</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--primary);">${details.cold}分</span>
+        periods.forEach(period => {
+          const data = Business.calcZodiacAnalysis(period);
+          if (!data) return;
+          
+          const score = data.zodiacScores ? data.zodiacScores[zodiac] : 0;
+          const details = data.zodiacDetails ? data.zodiacDetails[zodiac] : { cold: 0, hot: 0, shape: 0, interval: 0 };
+          const count = data.zodCount ? data.zodCount[zodiac] : 0;
+          const miss = data.zodMiss ? data.zodMiss[zodiac] : 0;
+          const avgMiss = data.zodAvgMiss ? data.zodAvgMiss[zodiac] : 0;
+          
+          // 查找排名
+          let rank = '-';
+          if (data.sortedZodiacs) {
+            const idx = data.sortedZodiacs.findIndex(([z]) => z === zodiac);
+            if (idx !== -1) rank = `第${idx + 1}名`;
+          }
+          
+          periodsHtml += `
+            <div class="period-analysis">
+              <h4 class="section-title">${periodLabels[period]}分析</h4>
+              <div class="score-card">
+                <div class="score-grid">
+                  <div class="score-item">
+                    <div class="score-header">
+                      <span class="score-label">冷号状态</span>
+                      <span class="score-value">${details.cold}分</span>
+                    </div>
+                    <div class="score-bar">
+                      <div class="score-bar-fill" style="width:${(details.cold / 30) * 100}%; background: linear-gradient(90deg, #6366f1, #8b5cf6);"></div>
+                    </div>
+                  </div>
+                  <div class="score-item">
+                    <div class="score-header">
+                      <span class="score-label">热号状态</span>
+                      <span class="score-value">${details.hot}分</span>
+                    </div>
+                    <div class="score-bar">
+                      <div class="score-bar-fill" style="width:${(details.hot / 20) * 100}%; background: linear-gradient(90deg, #10b981, #34d399);"></div>
+                    </div>
+                  </div>
+                  <div class="score-item">
+                    <div class="score-header">
+                      <span class="score-label">形态匹配</span>
+                      <span class="score-value">${details.shape}分</span>
+                    </div>
+                    <div class="score-bar">
+                      <div class="score-bar-fill" style="width:${(details.shape / 30) * 100}%; background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
+                    </div>
+                  </div>
+                  <div class="score-item">
+                    <div class="score-header">
+                      <span class="score-label">间隔匹配</span>
+                      <span class="score-value">${details.interval}分</span>
+                    </div>
+                    <div class="score-bar">
+                      <div class="score-bar-fill" style="width:${(details.interval / 20) * 100}%; background: linear-gradient(90deg, #ef4444, #f87171);"></div>
+                    </div>
+                  </div>
                 </div>
-                <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
-                  <div style="height:100%;width:${(details.cold / 30) * 100}%;background:linear-gradient(90deg, #6366f1, #8b5cf6);border-radius:3px;"></div>
+                <div class="total-score">
+                  <div class="total-score-header">
+                    <span class="total-score-label">综合评分</span>
+                    <span class="total-score-value">${score}分</span>
+                  </div>
+                  <div class="total-score-bar">
+                    <div class="total-score-fill" style="width:${(score / 100) * 100}%; background: linear-gradient(90deg, #6366f1, #ec4899);"></div>
+                  </div>
                 </div>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                  <span style="font-size:13px;color:var(--text);">热号状态</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--primary);">${details.hot}分</span>
-                </div>
-                <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
-                  <div style="height:100%;width:${(details.hot / 20) * 100}%;background:linear-gradient(90deg, #10b981, #34d399);border-radius:3px;"></div>
-                </div>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                  <span style="font-size:13px;color:var(--text);">形态匹配</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--primary);">${details.shape}分</span>
-                </div>
-                <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
-                  <div style="height:100%;width:${(details.shape / 30) * 100}%;background:linear-gradient(90deg, #f59e0b, #fbbf24);border-radius:3px;"></div>
-                </div>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                  <span style="font-size:13px;color:var(--text);">间隔匹配</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--primary);">${details.interval}分</span>
-                </div>
-                <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
-                  <div style="height:100%;width:${(details.interval / 20) * 100}%;background:linear-gradient(90deg, #ef4444, #f87171);border-radius:3px;"></div>
+                <div class="stats-grid">
+                  <div class="stat-item">
+                    <div class="stat-label">出现次数</div>
+                    <div class="stat-value">${count}次</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-label">遗漏期数</div>
+                    <div class="stat-value">${miss}期</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-label">平均遗漏</div>
+                    <div class="stat-value">${avgMiss}期</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-label">排名</div>
+                    <div class="stat-value">${rank}</div>
+                  </div>
                 </div>
               </div>
             </div>
-            <div style="margin-top:16px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                <span style="font-size:14px;font-weight:600;color:var(--text);">综合评分</span>
-                <span style="font-size:16px;font-weight:700;color:var(--primary);">${score}分</span>
-              </div>
-              <div style="height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden;">
-                <div style="height:100%;width:${(score / 100) * 100}%;background:linear-gradient(90deg, #6366f1, #ec4899);border-radius:4px;"></div>
-              </div>
+          `;
+        });
+        
+        // 移除加载状态
+        loadingModal.style.opacity = '0';
+        setTimeout(() => loadingModal.remove(), 300);
+
+        // 创建弹窗容器
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.style.opacity = '0';
+        modal.style.transition = 'opacity 0.3s ease, backdrop-filter 0.3s ease';
+        modal.style.zIndex = '1000';
+        
+        // 生成完整HTML
+        let detailHtml = `
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3 class="modal-title">${zodiac} - 详细评分</h3>
+              <button class="modal-close-btn" onclick="Business.closeModal(this)">×</button>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px;font-size:12px;">
-              <div style="background:var(--bg-secondary);border-radius:8px;padding:10px;text-align:center;">
-                <div style="font-size:12px;color:var(--sub-text);margin-bottom:4px;">出现次数</div>
-                <div style="font-size:16px;font-weight:700;color:var(--primary);">${count}次</div>
-              </div>
-              <div style="background:var(--bg-secondary);border-radius:8px;padding:10px;text-align:center;">
-                <div style="font-size:12px;color:var(--sub-text);margin-bottom:4px;">遗漏期数</div>
-                <div style="font-size:16px;font-weight:700;color:var(--primary);">${miss}期</div>
-              </div>
-              <div style="background:var(--bg-secondary);border-radius:8px;padding:10px;text-align:center;">
-                <div style="font-size:12px;color:var(--sub-text);margin-bottom:4px;">平均遗漏</div>
-                <div style="font-size:16px;font-weight:700;color:var(--primary);">${avgMiss}期</div>
-              </div>
-              <div style="background:var(--bg-secondary);border-radius:8px;padding:10px;text-align:center;">
-                <div style="font-size:12px;color:var(--sub-text);margin-bottom:4px;">排名</div>
-                <div style="font-size:16px;font-weight:700;color:var(--primary);">${rank}</div>
-              </div>
+            
+            <div class="modal-body">
+              ${periodsHtml}
             </div>
           </div>
         `;
-      });
-      
-      const modal = document.createElement('div');
-      modal.className = 'modal-overlay';
-      modal.style.opacity = '0';
-      modal.style.transition = 'opacity 0.3s ease';
-      modal.innerHTML = `
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3 class="modal-title">${zodiac} - 详细评分</h3>
-            <button class="modal-close-btn" onclick="const modal = this.closest('.modal-overlay'); modal.style.opacity = '0'; setTimeout(() => modal.remove(), 300);">×</button>
-          </div>
-          <div style="text-align:center;margin-bottom:20px;">
-            <div style="font-size:48px;font-weight:700;color:var(--primary);margin-bottom:8px;">${zodiac}</div>
-            <div style="color:var(--sub-text);font-size:13px;">多维度综合评分分析</div>
-          </div>
-          ${periodsHtml}
-        </div>
-      `;
-      
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          modal.style.opacity = '0';
-          setTimeout(() => modal.remove(), 300);
-        }
-      });
-      
-      document.body.appendChild(modal);
-      
-      // 触发动画
-      setTimeout(() => {
-        modal.style.opacity = '1';
-      }, 10);
-    } catch (e) {
-      console.error('显示生肖详细评分失败', e);
-      Toast.show('加载详情失败');
-    }
+        
+        modal.innerHTML = detailHtml;
+        
+        // 点击遮罩层关闭
+        modal.addEventListener('click', (e) => {
+          if(e.target === modal) {
+            Business.closeModal(modal);
+          }
+        });
+        
+        document.body.appendChild(modal);
+        
+        // 触发动画
+        setTimeout(() => {
+          modal.style.opacity = '1';
+        }, 10);
+      } catch (error) {
+        // 错误处理
+        console.error('显示生肖详细评分失败:', error);
+        loadingModal.style.opacity = '0';
+        setTimeout(() => loadingModal.remove(), 300);
+        Toast.show('加载详情失败，请稍后重试');
+      }
+    }, 100);
   },
 
   /**
@@ -9508,21 +9830,14 @@ const Business = {
       if(!historyListEl) return;
       
       const history = state.selectedZodiacHistory;
-      const isCollapsed = state.selectedZodiacHistoryCollapsed;
       
       if(!history || history.length === 0) {
         historyListEl.innerHTML = '<div style="text-align:center;color:var(--sub-text);padding:20px;font-size:13px;">暂无精选生肖历史</div>';
         return;
       }
       
-      // 更新折叠图标
-      if(toggleIconEl) {
-        toggleIconEl.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
-      }
-      
-      // 折叠时只显示2条
-      const maxDisplay = isCollapsed ? 2 : history.length;
-      const displayHistory = history.slice(0, maxDisplay);
+      // 显示所有历史记录
+      const displayHistory = history;
       
       let html = '';
       displayHistory.forEach((item, globalIdx) => {
@@ -9562,10 +9877,7 @@ const Business = {
         `;
       });
       
-      // 如果折叠且还有更多数据，显示提示
-      if(isCollapsed && history.length > 2) {
-        html += `<div style="text-align:center;color:var(--sub-text);padding:10px;font-size:12px;">还有 ${history.length - 2} 条记录，点击展开</div>`;
-      }
+
       
       historyListEl.innerHTML = html;
     } catch(e) {
@@ -9573,19 +9885,7 @@ const Business = {
     }
   },
 
-  /**
-   * 切换精选生肖历史折叠状态
-   */
-  toggleSelectedZodiacHistoryCollapse: () => {
-    try {
-      const state = StateManager._state;
-      const currentCollapsed = state.selectedZodiacHistoryCollapsed;
-      StateManager.setState({ selectedZodiacHistoryCollapsed: !currentCollapsed }, false);
-      Business.renderSelectedZodiacHistory();
-    } catch(e) {
-      console.error('切换折叠状态失败', e);
-    }
-  },
+
 
   /**
    * 切换精选生肖历史页码
@@ -9710,7 +10010,7 @@ const Business = {
       const zodiacNames = item.selectedZodiacs.map(z => z.zodiac).join(' ');
       
       let zodiacsDetailHtml = '';
-      item.selectedZodiacs.forEach(z => {
+      item.selectedZodiacs.forEach((z, index) => {
         const periodTags = z.periods.map(period => {
           const periodMap = { 10: '1', 20: '2', 30: '3' };
           return `<span class="modal-detail-period-tag">${periodMap[period] || period}</span>`;
@@ -9719,7 +10019,7 @@ const Business = {
         const isMatch = item.actualZodiac && z.zodiac === item.actualZodiac;
         
         zodiacsDetailHtml += `
-          <div class="modal-detail-card ${isMatch ? 'hit' : ''}">
+          <div class="modal-detail-card ${isMatch ? 'hit' : ''}" style="animation: slideInUp 0.3s ease forwards; animation-delay: ${index * 0.1}s; opacity: 0; transform: translateY(20px);">
             <div class="modal-detail-card-title">${z.zodiac}</div>
             <div class="modal-detail-period-tags">${periodTags}</div>
           </div>
@@ -9731,7 +10031,7 @@ const Business = {
         drawResultHtml = `
           <div class="modal-detail-section">
             <div class="modal-detail-section-title">开奖生肖</div>
-            <div class="modal-detail-result-card">
+            <div class="modal-detail-result-card" style="animation: slideInUp 0.3s ease forwards; animation-delay: 0.5s; opacity: 0; transform: translateY(20px);">
               <div class="modal-detail-result-main">
                 <div class="modal-detail-result-value">${item.actualZodiac}</div>
               </div>
@@ -9750,12 +10050,14 @@ const Business = {
       
       const modal = document.createElement('div');
       modal.className = 'modal-overlay';
+      modal.style.opacity = '0';
+      modal.style.transition = 'opacity 0.3s ease, backdrop-filter 0.3s ease';
       
       modal.innerHTML = `
         <div class="modal-content">
           <div class="modal-header">
             <h3 class="modal-title">精选生肖详情</h3>
-            <button class="modal-close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
+            <button class="modal-close-btn" onclick="Business.closeModal(this)">×</button>
           </div>
           
           <div class="modal-info">
@@ -9772,19 +10074,27 @@ const Business = {
           
           ${drawResultHtml}
           
-          <div style="margin-top:1.25rem;">
-            <button class="btn-line" onclick="Business.copySelectedZodiacHistoryItem(${idx}, '${zodiacNames.replace(/'/g, "\\'")}', event)">复制生肖</button>
+          <div class="action-section">
+            <button class="btn-primary" onclick="Business.copySelectedZodiacHistoryItem(${idx}, '${zodiacNames.replace(/'/g, "\\'")}', event); Business.showCopySuccess(this)">复制生肖</button>
           </div>
         </div>
       `;
+      
       modal.addEventListener('click', (e) => {
-        if(e.target === modal) modal.remove();
+        if(e.target === modal) {
+          Business.closeModal(modal);
+        }
       });
       
       document.body.appendChild(modal);
+      
+      // 触发动画
+      setTimeout(() => {
+        modal.style.opacity = '1';
+      }, 10);
     } catch(e) {
       console.error('显示精选生肖历史详情失败', e);
-      Toast.show('显示详情失败');
+      Toast.show('加载失败，请稍后重试');
     }
   },
 
@@ -10072,21 +10382,14 @@ const Business = {
       if(!historyListEl) return;
       
       const history = state.hotNumbersHistory;
-      const isCollapsed = state.hotNumbersHistoryCollapsed || true;
-      
-      // 更新折叠图标
-      if(toggleIconEl) {
-        toggleIconEl.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
-      }
       
       if(history.length === 0) {
         historyListEl.innerHTML = '<div style="text-align:center;color:var(--sub-text);padding:20px;font-size:13px;">暂无特码热门top5历史</div>';
         return;
       }
       
-      // 确定要显示的记录数量 - 折叠时只显示2条
-      const maxDisplay = isCollapsed ? 2 : history.length;
-      const displayData = history.slice(0, maxDisplay);
+      // 显示所有历史记录
+      const displayData = history;
       
       let historyHtml = '';
       displayData.forEach((item, globalIdx) => {
@@ -10137,10 +10440,7 @@ const Business = {
         `;
       });
       
-      // 如果折叠且还有更多数据，显示提示
-      if(isCollapsed && history.length > 2) {
-        historyHtml += `<div style="text-align:center;color:var(--sub-text);padding:10px;font-size:12px;">还有 ${history.length - 2} 条记录，点击展开</div>`;
-      }
+
       
       historyListEl.innerHTML = historyHtml;
       
@@ -10727,10 +11027,10 @@ const EventBinder = {
       return;
     }
 
-    // 11. 预测历史期数按钮
+    // 11. 预测历史期数按钮（单选）
     const predictionPeriodBtn = target.closest('.prediction-period-btn[data-period]');
     if(predictionPeriodBtn){
-      Business.toggleButtonState(predictionPeriodBtn);
+      Business.toggleRadioButtonGroup(predictionPeriodBtn, '.prediction-period-btn');
       Business.savePredictionHistoryFilter();
       Business.renderZodiacPredictionHistory();
       return;
@@ -11013,5 +11313,715 @@ async function initApp() {
 // 页面加载完成后启动应用
 window.addEventListener('DOMContentLoaded', initApp);
 </script>
+
+<style>
+  /* 弹窗样式 */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(4px);
+  }
+  
+  .modal-content {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 0;
+    width: 90%;
+    max-width: 500px;
+    max-height: 85vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    animation: modalSlideIn 0.3s ease-out;
+  }
+  
+  @keyframes modalSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--card);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+  
+  .modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text);
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+  
+  .modal-close-btn:hover {
+    background: var(--bg-secondary);
+    transform: rotate(90deg);
+  }
+  
+  .modal-body {
+    padding: 24px;
+    max-height: 65vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-tertiary) var(--bg-secondary);
+  }
+  
+  .modal-body::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .modal-body::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 3px;
+  }
+  
+  .modal-body::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+  }
+  
+  .modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+  }
+
+  /* 模态框信息行样式 */
+  .modal-info {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  
+  .modal-info-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .modal-info-row:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
+  }
+  
+  .modal-info-label {
+    font-weight: 600;
+    color: var(--text);
+    min-width: 80px;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+  
+  /* 模态框详细章节标题样式 */
+  .modal-detail-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--primary-light);
+    position: relative;
+  }
+  
+  .modal-detail-section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: var(--primary);
+    border-radius: 2px;
+  }
+
+  /* 区块标题 */
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--primary-light);
+  }
+  
+  /* 号码网格 */
+  .numbers-section {
+    margin-bottom: 24px;
+  }
+  
+  .numbers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 12px;
+    justify-content: center;
+  }
+  
+  .number-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+  }
+  
+  .number-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .number-label {
+    font-size: 11px;
+    color: var(--sub-text);
+    text-align: center;
+    font-weight: 500;
+  }
+  
+  /* 评分区块 */
+  .score-section {
+    margin-bottom: 24px;
+  }
+  
+  .score-card {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.2s ease;
+  }
+  
+  .score-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .score-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .score-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .score-label {
+    font-size: 13px;
+    color: var(--text);
+  }
+  
+  .score-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+  }
+  
+  .score-bar {
+    height: 6px;
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.8s ease-out;
+  }
+  
+  /* 总分 */
+  .total-score {
+    margin-top: 16px;
+  }
+  
+  .total-score-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .total-score-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  
+  .total-score-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  
+  .total-score-bar {
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .total-score-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease-out;
+  }
+  
+  /* 操作区域 */
+  .action-section {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  }
+  
+  /* 提示框 */
+  .notice-box {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 16px;
+    color: var(--text);
+    border-left: 4px solid var(--warning);
+  }
+  
+  /* 响应式设计 */
+  @media (max-width: 480px) {
+    .modal-content {
+      width: 95%;
+      max-height: 90vh;
+    }
+    
+    .modal-body {
+      padding: 16px;
+      max-height: 70vh;
+    }
+    
+    .zodiac-name {
+      font-size: 36px;
+    }
+    
+    .score-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    
+    .numbers-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    
+    .number-item {
+      padding: 8px;
+    }
+  }
+  
+  /* 动画效果 */
+  .score-bar-fill,
+  .total-score-fill {
+    animation: scoreFill 1s ease-out forwards;
+  }
+  
+  @keyframes scoreFill {
+    from {
+      width: 0;
+    }
+  }
+  
+  .number-item {
+    animation: numberItemFadeIn 0.5s ease-out forwards;
+  }
+  
+  .number-item:nth-child(1) { animation-delay: 0.1s; }
+  .number-item:nth-child(2) { animation-delay: 0.2s; }
+  .number-item:nth-child(3) { animation-delay: 0.3s; }
+  .number-item:nth-child(4) { animation-delay: 0.4s; }
+  
+  @keyframes numberItemFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* 加载弹窗样式 */
+  .loading-modal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    min-width: 200px;
+  }
+  
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--bg-tertiary);
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .loading-text {
+    font-size: 14px;
+    color: var(--text);
+    text-align: center;
+  }
+  
+  /* 响应式优化 */
+  @media (max-width: 360px) {
+    .modal-content {
+      width: 98%;
+      max-height: 95vh;
+    }
+    
+    .modal-body {
+      padding: 12px;
+    }
+    
+    .zodiac-name {
+      font-size: 32px;
+    }
+    
+    .score-grid {
+      gap: 10px;
+    }
+    
+    .score-card {
+      padding: 16px;
+    }
+  }
+  
+  /* 无障碍支持 */
+  @media (prefers-reduced-motion: reduce) {
+    .modal-content,
+    .score-bar-fill,
+    .total-score-fill,
+    .number-item,
+    .loading-spinner {
+      animation: none;
+      transition: none;
+    }
+  }
+  
+  /* 动画效果 */
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* 精选生肖详情弹窗样式优化 */
+  .action-section {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .modal-detail-card {
+    transition: all 0.2s ease;
+  }
+  
+  .modal-detail-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .modal-detail-card.hit {
+    border: 2px solid var(--success);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  }
+  
+  /* 记录页面样式优化 */
+  .card {
+    transition: all 0.3s ease;
+  }
+  
+  .card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  .card-header {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .card-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+  
+  .card:hover .card-header::before {
+    transform: scaleX(1);
+  }
+  
+  .card-body {
+    position: relative;
+  }
+  
+  .special-history-item {
+    transition: all 0.3s ease;
+  }
+  
+  .special-history-item:hover {
+    border-color: var(--primary-light);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+  
+  .special-history-item:hover .special-history-delete {
+    transform: translateX(0);
+  }
+  
+  .history-tag {
+    transition: all 0.2s ease;
+  }
+  
+  .history-tag:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* 精选生肖弹窗样式 */
+  .period-analysis {
+    margin-bottom: 24px;
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+  }
+  
+  .stat-item {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    transition: all 0.2s ease;
+  }
+  
+  .stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .stat-label {
+    font-size: 12px;
+    color: var(--sub-text);
+    margin-bottom: 4px;
+  }
+  
+  .stat-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  
+  /* 滚动优化 */
+  .modal-body {
+    scroll-behavior: smooth;
+  }
+  
+  /* 响应式调整 */
+  @media (max-width: 480px) {
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    
+    .period-analysis {
+      margin-bottom: 20px;
+    }
+    
+    .score-card {
+      padding: 16px;
+    }
+    
+    .stat-item {
+      padding: 10px;
+    }
+  }
+  
+  @media (max-width: 360px) {
+    .stats-grid {
+      gap: 6px;
+    }
+    
+    .stat-item {
+      padding: 8px;
+    }
+    
+    .stat-value {
+      font-size: 14px;
+    }
+  }
+  
+  /* 记录页面响应式优化 */
+  @media (max-width: 768px) {
+    .card-header h2 {
+      font-size: 16px;
+    }
+    
+    .card-body {
+      padding: 16px;
+    }
+    
+    .modal-detail-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .card-header h2 {
+      font-size: 14px;
+    }
+    
+    .card-body {
+      padding: 12px;
+    }
+    
+    .special-history-item {
+      padding: 10px;
+    }
+    
+    .modal-detail-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 360px) {
+    .card-header h2 {
+      font-size: 12px;
+    }
+    
+    .modal-detail-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* 跨浏览器兼容性 */
+  @supports (-webkit-backdrop-filter: none) {
+    .modal-overlay {
+      -webkit-backdrop-filter: blur(8px);
+    }
+  }
+  
+  @supports not (backdrop-filter: none) {
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.7);
+    }
+  }
+  
+  /* 触摸设备优化 */
+  @media (hover: none) and (pointer: coarse) {
+    .card:hover {
+      transform: none;
+      box-shadow: var(--shadow);
+    }
+    
+    .card:hover .card-header::before {
+      transform: none;
+    }
+    
+    .history-tag:hover {
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .special-history-item:hover {
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .special-history-item:hover .special-history-delete {
+      transform: translateX(100%);
+    }
+  }
+</style>
 </body>
 </html>
